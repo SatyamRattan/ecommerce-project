@@ -1,0 +1,55 @@
+<div class="profile-container">
+    <!-- Container for the entire profile page -->
+
+    <h2>My Profile</h2>
+    <!-- Page heading -->
+
+    <div *ngIf="loading" class="loading">
+        Loading profile...
+    </div>
+    <!-- Show this loading message while the profile data is being fetched -->
+
+    <div *ngIf="error" class="error">
+        {{ error }}
+    </div>
+    <!-- Display any error messages from the component, e.g., failed API call -->
+
+    <div *ngIf="user" class="profile-details">
+        <!-- Only show profile details if the user object exists -->
+
+        <div class="profile-item">
+            <strong>Name:</strong> {{ user.name }}
+        </div>
+        <!-- Display user's name -->
+
+        <div class="profile-item">
+            <strong>Email:</strong> {{ user.email }}
+        </div>
+        <!-- Display user's email -->
+
+        <div class="profile-item">
+            <strong>Phone:</strong> {{ user.phone || 'N/A' }}
+        </div>
+        <!-- Display user's phone number, fallback to 'N/A' if empty -->
+
+        <div class="profile-item">
+            <strong>Gender:</strong> {{ user.gender }}
+        </div>
+        <!-- Display user's gender -->
+
+        <div class="profile-item">
+            <strong>Date of Birth:</strong> {{ user.dob || 'N/A' }}
+        </div>
+        <!-- Display user's date of birth, fallback to 'N/A' if empty -->
+
+        <div class="profile-item">
+            <strong>Address:</strong> {{ user.address || 'N/A' }}
+        </div>
+        <!-- Display user's address, fallback to 'N/A' if empty -->
+
+        <button (click)="logout()" class="logout-btn">
+            Logout
+        </button>
+        <!-- Logout button triggers the logout() method in the component -->
+    </div>
+</div>

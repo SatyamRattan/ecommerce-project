@@ -1,0 +1,116 @@
+<div class="cart-container">
+  <!-- Main container for the cart page. All cart-related content is wrapped here. -->
+
+  <h2>My Shopping Cart</h2>
+  <!-- Page title -->
+
+  <div *ngIf="loading" class="loading">
+    Loading cart...
+  </div>
+  <!-- Show this div if `loading` is true (cart data is being fetched). 
+       The *ngIf directive conditionally renders elements in Angular. -->
+
+  <div *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </div>
+  <!-- Show error message if `errorMessage` is non-empty.
+       Interpolation {{ }} is used to display dynamic values from component. -->
+
+  <div *ngIf="!loading && cartItems.length === 0" class="empty-cart">
+    <p>Your cart is empty</p>
+    <a routerLink="/products" class="continue-shopping">
+      Continue Shopping
+    </a>
+    <!-- If cart is loaded but empty, show a message and link back to products page.
+         routerLink directive is used to navigate without reloading the page. -->
+  </div>
+
+  <div *ngIf="!loading && cartItems.length > 0">
+    <!-- Display this section only if cart has items and is not loading -->
+
+    <div class="cart-items">
+      <!-- Container for the list of cart items -->
+
+      <div *ngFor="let item of cartItems" class="cart-item">
+        <!-- Loop through each item in cartItems array using *ngFor directive -->
+
+        <div class="item-details">
+          <!-- Container for product name and price -->
+
+          <h4>{{ item.product?.name || item.name }}</h4>
+          <!-- Display product name from item.product.name if exists, 
+               else fallback to item.name (optional chaining prevents errors if product is null) -->
+
+          <p class="item-price">
+            ₹{{ (item.product?.discount_price || item.product?.base_price || item.product?.price || item.price) |
+            number:'1.2-2' }}
+          </p>
+          <!-- Show product price. Use Angular number pipe to format price with 2 decimals -->
+        </div>
+
+        <div class="item-controls">
+          <!-- Controls for quantity, subtotal, and remove -->
+
+          <div class="quantity-controls">
+            <!-- Buttons to decrease/increase quantity -->
+
+            <button (click)="updateQuantity(item, item.quantity - 1)" [disabled]="item.quantity <= 1">
+              -
+            </button>
+            <!-- Call component method updateQuantity with quantity decreased by 1
+                 Disable button if quantity <= 1 to prevent invalid quantity -->
+
+            <span class="quantity">{{ item.quantity }}</span>
+            <!-- Show current quantity -->
+
+            <button (click)="updateQuantity(item, item.quantity + 1)">
+              +
+            </button>
+            <!-- Call updateQuantity to increase quantity by 1 -->
+          </div>
+
+          <p class="item-subtotal">
+            Subtotal: ₹{{ (item.product?.discount_price || item.product?.base_price || item.product?.price ||
+            item.price) * item.quantity | number:'1.2-2' }}
+          </p>
+          <!-- Calculate subtotal for this item: price × quantity
+               Format with 2 decimal places -->
+
+          <button (click)="removeItem(item)" class="remove-btn">
+            Remove
+          </button>
+          <!-- Calls removeItem(item) to delete this item from cart -->
+        </div>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <!-- Summary section with total amount and cart actions -->
+
+      <div class="summary-row">
+        <h3>Total:</h3>
+        <h3 class="total-amount">₹{{ total | number:'1.2-2' }}</h3>
+        <!-- Display total cart value from component's `total` property -->
+      </div>
+
+      <div class="cart-actions">
+        <!-- Buttons for cart operations -->
+
+        <button (click)="clearCart()" class="clear-btn">
+          Clear Cart
+        </button>
+        <!-- Calls component method clearCart() to remove all items -->
+
+        <a routerLink="/products" class="continue-shopping">
+          Continue Shopping
+        </a>
+        <!-- Link to browse more products -->
+
+        <a routerLink="/checkout/address" class="checkout-btn">
+          Proceed to Checkout
+        </a>
+        <!-- Link to navigate to checkout address page -->
+      </div>
+    </div>
+  </div>
+</div>

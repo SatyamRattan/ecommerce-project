@@ -1,0 +1,22 @@
+<div class="page">
+  <!-- Page container for categories page -->
+
+  <h1>Shop by Category</h1>
+  <!-- Page heading -->
+
+  <div class="grid">
+    <!-- Grid container to display categories in a grid layout -->
+
+    <!-- Loop through each category in the categories array -->
+    <div class="card" *ngFor="let cat of categories">
+      <!-- Individual category card -->
+
+      <h3>{{ cat.name }}</h3>
+      <!-- Display the name of the category -->
+
+      <button (click)="openCategory(cat.id)">View Products</button>
+      <!-- Button to navigate to products page filtered by this category -->
+      <!-- (click) calls openCategory() in the component with the category id -->
+    </div>
+  </div>
+</div>

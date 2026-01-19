@@ -1,0 +1,85 @@
+<nav class="navbar">
+    <!-- Main navigation bar container -->
+
+    <div class="container">
+        <!-- Inner container for layout and spacing -->
+
+        <a routerLink="/" class="logo">Shop</a>
+        <!-- Logo of the website, clicking navigates to home page -->
+
+        <ul class="nav-links">
+            <!-- Primary navigation links -->
+
+            <li>
+                <a routerLink="/categories" routerLinkActive="active">
+                    Categories
+                </a>
+                <!-- Navigates to product categories page; adds 'active' class when URL matches -->
+            </li>
+
+            <li>
+                <a routerLink="/wishlist" routerLinkActive="active">
+                    Wishlist
+                </a>
+                <!-- Navigates to the user's wishlist; highlights when active -->
+            </li>
+
+            <li>
+                <a routerLink="/contact" routerLinkActive="active">
+                    Contact
+                </a>
+                <!-- Navigates to contact page; highlights when active -->
+            </li>
+        </ul>
+
+        <ul class="nav-actions">
+            <!-- Actions like cart, orders, login/logout -->
+
+            <li>
+                <a routerLink="/cart" routerLinkActive="active">
+                    Cart
+                    <span *ngIf="cartCount > 0" class="badge">{{ cartCount }}</span>
+                    <!-- Shows the number of items in cart if cartCount > 0 -->
+                </a>
+            </li>
+
+            <li>
+                <a routerLink="/orders" routerLinkActive="active">
+                    Orders
+                </a>
+                <!-- Navigates to user's orders page -->
+            </li>
+
+            <!-- List item for the login section, only visible when NOT logged in -->
+            <li *ngIf="!isLoggedIn()" class="login-container">
+                <!-- Login navigation link that wraps the icon and text -->
+                <a routerLink="/login" routerLinkActive="active" class="login-btn">
+                    <!-- Label for the login button -->
+                    <span class="login-text">Login</span>
+                </a>
+            </li>
+
+            <!-- List item for the profile section, only visible when logged in -->
+            <li *ngIf="isLoggedIn()" class="profile-container">
+                <!-- Profile navigation link that wraps the icon and text -->
+                <a routerLink="/profile" routerLinkActive="active" class="profile-btn">
+                    <!-- Circular icon container for the user ID -->
+                    <div class="profile-icon">
+                        <!-- Displays the first character of user ID or placeholder -->
+                        {{ userId ? (userId.toString() | slice:0:1) : 'U' }}
+                    </div>
+                    <!-- Label for the profile button -->
+                    <span class="profile-text">Profile</span>
+                </a>
+            </li>
+
+            <li *ngIf="isLoggedIn()">
+                <!-- Logout link with href to ensure correct click behavior (no double click need) -->
+                <a href="javascript:void(0)" (click)="logout()" style="cursor: pointer;">
+                    Logout
+                </a>
+                <!-- Shows logout button only if user IS logged in; triggers logout method -->
+            </li>
+        </ul>
+    </div>
+</nav>

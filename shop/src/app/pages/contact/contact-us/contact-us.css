@@ -1,0 +1,71 @@
+/* form { max-width: 400px; margin: auto; }
+input, textarea { width: 100%; margin: 10px 0; padding: 8px; }
+button { width: 100%; padding: 10px; background: black; color: white; }
+.success { color: green; text-align: center; margin: 10px; } */
+/* Page background */
+/* Page layout */
+body {
+  background-color: blueviolet;
+}
+h2 {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 18px;
+  color: white;
+}
+
+/* Success message */
+.success {
+  text-align: center;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+/* Form container */
+form {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+}
+
+/* Inputs & textarea */
+input, textarea {
+  width: 100%;
+  padding: 11px 12px;
+  margin-bottom: 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 11px;
+  background: #2563eb;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}

@@ -1,0 +1,104 @@
+<div class="register-container">
+    <!-- Main container for the registration form, used for styling purposes -->
+
+    <h2>Register</h2>
+    <!-- Page heading -->
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <!-- 
+            Angular Reactive Form binding:
+            - [formGroup]="registerForm" binds this form to the FormGroup defined in the component
+            - (ngSubmit)="onSubmit()" triggers the onSubmit() method when the form is submitted
+        -->
+
+        <!-- Name input field -->
+        <div class="form-group">
+            <label for="name">Name</label>
+            <!-- Label linked to input via 'for' attribute -->
+            <input type="text" id="name" formControlName="name" class="form-control" />
+            <!-- 
+                formControlName="name" binds this input to the 'name' form control in registerForm
+                class="form-control" is for styling (Bootstrap or custom CSS)
+            -->
+            <div *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.invalid" class="error">
+                Name is required
+                <!-- 
+                    *ngIf conditionally displays the error:
+                    - Shows if the control has been touched (user focused and blurred)
+                    - And if the control is invalid (fails Validators.required)
+                -->
+            </div>
+        </div>
+
+        <!-- Email input field -->
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" formControlName="email" class="form-control" />
+            <!-- Input type="email" ensures HTML-level validation -->
+            <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="error">
+                Valid email is required
+                <!-- Shows if user touched the field and it's invalid (required or invalid email format) -->
+            </div>
+        </div>
+
+        <!-- Password input field -->
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" formControlName="password" class="form-control" />
+            <!-- type="password" masks the input -->
+            <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="error">
+                Password (min 6 chars) is required
+                <!-- Shows error if password is invalid (empty or less than 6 characters) -->
+            </div>
+        </div>
+
+        <!-- Phone input field -->
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" formControlName="phone" class="form-control" />
+            <!-- Optional field, no error message is displayed -->
+        </div>
+
+        <!-- Gender dropdown -->
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" formControlName="gender" class="form-control">
+                <!-- Select bound to 'gender' form control -->
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+            </select>
+        </div>
+
+        <!-- Date of Birth input -->
+        <div class="form-group">
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="dob" formControlName="dob" class="form-control" />
+            <!-- HTML5 date input; optional field bound to 'dob' control -->
+        </div>
+
+        <!-- Address textarea -->
+        <div class="form-group">
+            <label for="address">Address</label>
+            <textarea id="address" formControlName="address" class="form-control"></textarea>
+            <!-- Bound to 'address' control; multi-line input -->
+        </div>
+
+        <!-- Backend/API error display -->
+        <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+            <!-- Shows error message returned from backend after form submission -->
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit" [disabled]="registerForm.invalid">Register</button>
+        <!-- 
+            type="submit" triggers (ngSubmit) on the form
+            [disabled]="registerForm.invalid" disables the button until the form is valid
+        -->
+    </form>
+
+    <!-- Login link -->
+    <p>Already have an account? <a routerLink="/login">Login here</a></p>
+    <!-- routerLink navigates to the login page without page reload -->
+</div>

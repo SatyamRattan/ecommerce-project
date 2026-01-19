@@ -1,0 +1,52 @@
+<!-- <p>contact-us works!</p> -->
+<!-- This was probably a placeholder or debug message, now commented out -->
+
+<h2>Contact Us</h2>
+<!-- Main heading of the page -->
+
+<!-- Success message displayed after form submission -->
+<div *ngIf="submitted" class="success">
+  Thank you! We'll get back to you soon.
+</div>
+<!-- 
+  *ngIf="submitted" => Angular structural directive that shows this div
+  only if the "submitted" property in component is true
+-->
+
+<!-- Contact form -->
+<form (ngSubmit)="submit()">
+  <!-- 
+    (ngSubmit)="submit()" => Angular event binding. Calls the submit() function
+    in component when form is submitted
+  -->
+
+  <!-- Input for user's name -->
+  <input 
+    placeholder="Your Name" 
+    [(ngModel)]="form.name" 
+    name="name">
+  <!-- 
+    [(ngModel)]="form.name" => Two-way data binding. Keeps the input value
+    in sync with form.name property in component
+    name="name" => Required for ngModel to register the control
+  -->
+
+  <!-- Input for user's email -->
+  <input 
+    placeholder="Your Email" 
+    [(ngModel)]="form.email" 
+    name="email">
+  <!-- Same two-way binding logic as above -->
+
+  <!-- Textarea for user's message -->
+  <textarea 
+    placeholder="Your Message" 
+    [(ngModel)]="form.message" 
+    name="message">
+  </textarea>
+  <!-- Two-way binding with form.message -->
+
+  <!-- Submit button -->
+  <button type="submit">Send Message</button>
+  <!-- Clicking this triggers the (ngSubmit)="submit()" event -->
+</form>

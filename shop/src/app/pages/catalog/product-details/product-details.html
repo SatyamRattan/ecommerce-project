@@ -1,0 +1,40 @@
+<!-- Container for the product details page -->
+<!-- *ngIf="product" ensures this section only renders when the product data is loaded -->
+<div class="product-container" *ngIf="product">
+
+  <!-- Box wrapping the product info -->
+  <div class="product-box">
+    
+    <!-- Product Name -->
+    <h1>{{ product.name }}</h1>
+    
+    <!-- Product Price -->
+    <!-- Uses discount price if available, otherwise shows base price -->
+    <p class="price">
+      ₹{{ product.discount_price || product.base_price }}
+    </p>
+
+    <!-- Stock status -->
+    <!-- Shown if stock is greater than 0 -->
+    <p class="stock" *ngIf="product.stock > 0">In Stock</p>
+
+    <!-- Out of stock message -->
+    <!-- Shown if stock is exactly 0 -->
+    <p class="out" *ngIf="product.stock === 0">Out of Stock</p>
+
+    <!-- Product Description -->
+    <!-- Fallback text if description is empty -->
+    <p class="description">
+      {{ product.description || 'No description available.' }}
+    </p>
+
+    <!-- Add to Cart Button -->
+    <!-- Calls the addToCart() method in the component -->
+    <button (click)="addToCart()">Add to Cart</button>
+
+    <!-- Add to Wishlist Button -->
+    <!-- Calls the addToWishlist() method in the component -->
+    <button (click)="addToWishlist()" class="wishlist-btn">Add to Wishlist</button>
+
+  </div>
+</div>

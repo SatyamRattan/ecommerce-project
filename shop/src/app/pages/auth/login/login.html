@@ -1,0 +1,57 @@
+<!-- Container wrapping the entire login form -->
+<div class="login-container">
+
+    <!-- Page heading -->
+    <h2>Login</h2>
+
+    <!-- Login form bound to Reactive FormGroup 'loginForm' -->
+    <!-- (ngSubmit)="onSubmit()" triggers the component method on form submission -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <!-- Email field group -->
+        <div class="form-group">
+            <!-- Label for accessibility and linking to input -->
+            <label for="email">Email</label>
+
+            <!-- Email input bound to formControl 'email' -->
+            <!-- 'id' links with label for accessibility -->
+            <!-- 'formControlName' binds this input to the Reactive Form control -->
+            <input type="email" id="email" formControlName="email" class="form-control" />
+
+            <!-- Error message shown only if the email control has been touched AND is invalid -->
+            <!-- *ngIf checks the control's touched status and validity -->
+            <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="error">
+                Valid email is required
+            </div>
+        </div>
+
+        <!-- Password field group -->
+        <div class="form-group">
+            <!-- Label for password input -->
+            <label for="password">Password</label>
+
+            <!-- Password input bound to formControl 'password' -->
+            <!-- Type 'password' hides the input characters -->
+            <input type="password" id="password" formControlName="password" class="form-control" />
+
+            <!-- Error message for invalid/touched password field -->
+            <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="error">
+                Password is required
+            </div>
+        </div>
+
+        <!-- General error message for login failures from the backend -->
+        <!-- Bound to 'errorMessage' property in the component -->
+        <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+        </div>
+
+        <!-- Submit button -->
+        <!-- Disabled if the form is invalid (Reactive Form validation) -->
+        <button type="submit" [disabled]="loginForm.invalid">Login</button>
+    </form>
+
+    <!-- Link to registration page for users without an account -->
+    <!-- Uses RouterLink directive for Angular navigation -->
+    <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+</div>

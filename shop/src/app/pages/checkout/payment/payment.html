@@ -1,0 +1,138 @@
+<!-- Main container for the checkout/payment page -->
+<div class="checkout-container">
+
+    <!-- Header section for checkout steps -->
+    <div class="checkout-header">
+
+        <!-- Visual steps indicator -->
+        <div class="steps">
+            <!-- Step 1: Address -->
+            <div class="step">1. Address</div>
+            <!-- Step 2: Payment (active/current step) -->
+            <div class="step active">2. Payment</div>
+            <!-- Step 3: Confirmation -->
+            <div class="step">3. Confirm</div>
+        </div>
+
+        <!-- Page title -->
+        <h2>Review & Pay</h2>
+    </div>
+
+    <!-- Main grid layout: left = order summary, right = payment options -->
+    <div class="checkout-grid">
+
+        <!-- Left column: Order summary -->
+        <div class="order-summary">
+
+            <!-- Shipping Address Section -->
+            <div class="section">
+                <h4>Shipping To</h4>
+
+                <!-- Display address if 'address' exists -->
+                <div class="address-card" *ngIf="address">
+                    <p><strong>Address:</strong> {{ address.address }}</p>  <!-- Street/Address -->
+                    <p><strong>City:</strong> {{ address.city }}</p>        <!-- City -->
+                    <p><strong>State/Pincode:</strong> {{ address.state }} - {{ address.pincode }}</p> <!-- State & Pincode -->
+                    <p><strong>Country:</strong> {{ address.country }}</p>  <!-- Country -->
+                    <!-- Link to edit shipping address -->
+                    <a routerLink="/checkout/address" class="edit-btn">Edit Address</a>
+                </div>
+            </div>
+
+            <!-- Order Items Section -->
+            <div class="section">
+                <h4>Order Items</h4>
+
+                <!-- List of cart items -->
+                <div class="items-list">
+                    <!-- Loop through each cart item -->
+                    <div class="cart-item" *ngFor="let item of cartItems">
+
+                        <!-- Product information -->
+                        <div class="item-info">
+                            <!-- Product name; fallback to 'Product' if name is missing -->
+                            <h5>{{ item.product?.name || 'Product' }}</h5>
+
+                            <!-- Quantity and price -->
+                            <p>
+                                Qty: {{ item.quantity }} x 
+                                ₹{{ (item.product?.price || item.price) | number:'1.2-2' }}
+                            </p>
+                        </div>
+
+                        <!-- Total price for this cart item -->
+                        <p class="item-total">
+                            ₹{{ ((item.product?.price || item.price) * item.quantity) | number:'1.2-2' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End of order-summary -->
+
+        <!-- Right column: Payment sidebar -->
+        <div class="payment-sidebar">
+            <div class="payment-card">
+
+                <!-- Payment method selection -->
+                <div class="payment-selection">
+
+                    <!-- Cash on Delivery option -->
+                    <div class="payment-method" [class.active]="paymentMethod === 'cod'" (click)="setPaymentMethod('cod')"> <!-- Apply 'active' class if selected -->       <!-- On click, set paymentMethod to 'cod' -->
+                        <span class="dot"></span>
+                        <span>Cash on Delivery</span>
+                    </div>
+
+                    <!-- Card payment option (currently waitlist) -->
+                    <div class="payment-method" [class.active]="paymentMethod === 'card'" (click)="setPaymentMethod('card')"> <!-- Apply 'active' class if selected -->       <!-- On click, set paymentMethod to 'card' -->
+                        <span class="dot"></span>
+                        <span>Credit/Debit Card (Waitlist)</span>
+                    </div>
+
+                </div> <!-- End payment-selection -->
+
+                <!-- Order total summary -->
+                <div class="total-section">
+                    <!-- Items total -->
+                    <div class="row">
+                        <span>Items Total:</span>
+                        <span>₹{{ total | number:'1.2-2' }}</span>
+                    </div>
+
+                    <!-- Shipping info -->
+                    <div class="row">
+                        <span>Shipping:</span>
+                        <span class="free">FREE</span>
+                    </div>
+
+                    <!-- Grand total -->
+                    <div class="row grand-total">
+                        <span>Order Total:</span>
+                        <span>₹{{ total | number:'1.2-2' }}</span>
+                    </div>
+                </div> <!-- End total-section -->
+
+                <!-- Terms & Conditions agreement -->
+                <div class="agreement-section">
+                    <label class="checkbox-container">
+                        <!-- Two-way binding: 'agreed' property reflects checkbox state -->
+                        <input type="checkbox" [(ngModel)]="agreed">
+                        <span class="checkmark"></span>
+                        I agree to the Terms & Conditions
+                    </label>
+                </div>
+
+                <!-- Error message display -->
+                <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+                <!-- Place order button -->
+                <button class="btn-pay" [disabled]="isProcessing || !agreed"(click)='placeOrder()'> <!-- Disable if processing or user hasn’t agreed On click, call placeOrder() method -->
+                    <!-- Dynamic button text based on processing state -->
+                    {{ isProcessing ? 'Processing...' : 'Place Order ₹' + (total | number:'1.2-2') }}
+                </button>
+
+            </div> <!-- End payment-card -->
+        </div> <!-- End payment-sidebar -->
+
+    </div> <!-- End checkout-grid -->
+</div> <!-- End checkout-container -->

@@ -1,0 +1,104 @@
+<div class="checkout-container">
+    <!-- Checkout Header with steps -->
+    <div class="checkout-header">
+        <div class="steps">
+            <!-- Step indicators: mark current step as active -->
+            <div class="step active">1. Address</div> <!-- Current step -->
+            <div class="step">2. Payment</div>
+            <div class="step">3. Confirm</div>
+        </div>
+        <h2>Shipping Address</h2> <!-- Page heading -->
+    </div>
+
+    <!-- Reactive Form binding -->
+    <form [formGroup]="addressForm" (ngSubmit)="onSubmit()" class="address-form">
+        <!-- Street Address Field -->
+        <div class="form-group">
+            <label for="address">Street Address</label>
+            <textarea id="address" formControlName="address" placeholder="House/Flat No, Street, Locality"></textarea>
+
+            <!-- Validation message: required -->
+            <div class="error"
+                *ngIf="addressForm.get('address')?.touched && addressForm.get('address')?.errors?.['required']">
+                Address is required
+            </div>
+
+            <!-- Validation message: minlength -->
+            <div class="error"
+                *ngIf="addressForm.get('address')?.touched && addressForm.get('address')?.errors?.['minlength']">
+                Please enter a more detailed address
+            </div>
+        </div>
+
+        <!-- City and State Fields in same row -->
+        <div class="form-row">
+            <!-- City -->
+            <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" formControlName="city" placeholder="City">
+                <!-- Validation message: required -->
+                <div class="error"
+                    *ngIf="addressForm.get('city')?.touched && addressForm.get('city')?.errors?.['required']">
+                    City is required
+                </div>
+            </div>
+
+            <!-- State -->
+            <div class="form-group">
+                <label for="state">State</label>
+                <input type="text" id="state" formControlName="state" placeholder="State">
+                <!-- Validation message: required -->
+                <div class="error"
+                    *ngIf="addressForm.get('state')?.touched && addressForm.get('state')?.errors?.['required']">
+                    State is required
+                </div>
+            </div>
+        </div>
+
+        <!-- Pincode and Country Fields in same row -->
+        <div class="form-row">
+            <!-- Pincode -->
+            <div class="form-group">
+                <label for="pincode">Pincode</label>
+                <input type="text" id="pincode" formControlName="pincode" placeholder="6-digit Pincode">
+                <!-- Validation message: required and pattern -->
+                <div class="error" *ngIf="addressForm.get('pincode')?.touched && addressForm.get('pincode')?.errors">
+                    Enter a valid 6-digit pincode
+                </div>
+            </div>
+
+            <!-- Country (readonly) -->
+            <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" formControlName="country" readonly>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="actions">
+            <!-- Back button -->
+            <a routerLink="/cart" class="btn-secondary">Back to Cart</a>
+            <!-- Submit button: disabled if form is invalid -->
+            <button type="submit" class="btn-primary" [disabled]="addressForm.invalid">
+                Continue to Payment
+            </button>
+        </div>
+    </form>
+</div>
+
+
+<!-- Explanation of Angular Features Used
+
+[formGroup]="addressForm" → binds the form to the reactive FormGroup defined in the component.
+
+formControlName="..." → connects each input/textarea to a specific control in the FormGroup.
+
+(ngSubmit)="onSubmit()" → calls the component’s onSubmit() method on form submission.
+
+*ngIf="...?.touched && ...?.errors?.['required']" → shows validation errors only if the field has been touched and has validation errors.
+
+[disabled]="addressForm.invalid" → disables the submit button until the form is valid.
+
+readonly → prevents editing the country field.
+
+routerLink="/cart" → navigates back to the cart page. -->

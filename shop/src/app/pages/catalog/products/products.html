@@ -1,0 +1,46 @@
+<!-- Page title for the products page -->
+<h2 class="title">Products</h2>
+
+<!-- Loading state: show this div while products are being fetched -->
+<div *ngIf="isLoading" class="loading-state">
+  <p>Loading products...</p> <!-- Message displayed to user during loading -->
+</div>
+
+<!-- Empty state: shown when loading is done but there are no products to display -->
+<div *ngIf="!isLoading && products.length === 0" class="empty-state">
+  <p>No products found in this category.</p> <!-- Inform user that no products match the filter/category -->
+  <button (click)="router.navigate(['/products'])">View All Products</button>
+  <!-- Button navigates back to the full products page -->
+</div>
+
+<!-- Products grid: displays all fetched products -->
+<div class="products-grid" *ngIf="!isLoading && products.length > 0">
+  <!-- Loop through the products array and create a card for each product -->
+  <div class="product-card" *ngFor="let product of products" 
+       (click)="openProduct(product.id)">
+    <!-- When user clicks on the card (outside the button), navigate to product detail page -->
+
+    <!-- Product Name -->
+    <h3>{{ product.name }}</h3> <!-- Display the product's name -->
+
+    <!-- Product Price -->
+    <p class="price">
+      ₹{{ product.discount_price || product.base_price }}
+      <!-- Show discount price if available, otherwise show base price -->
+    </p>
+
+    <!-- Product Stock Status -->
+    <p class="stock" *ngIf="product.stock > 0">In Stock</p>
+    <!-- Display "In Stock" if the product has quantity > 0 -->
+
+    <p class="out" *ngIf="product.stock === 0">Out of Stock</p>
+    <!-- Display "Out of Stock" if the product quantity is zero -->
+
+    <!-- Add to Cart Button -->
+    <button class="btn-add" (click)="addToCart($event, product)">
+      Add to Cart
+    </button>
+    <!-- Click handler calls addToCart() method from the component.
+         $event is passed to stop propagation so clicking the button doesn't trigger card click (openProduct). -->
+  </div>
+</div>

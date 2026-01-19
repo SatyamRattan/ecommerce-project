@@ -1,0 +1,175 @@
+<!-- Main wrapper for the order tracking page -->
+<div class="tracking-container">
+
+    <!-- Header section -->
+    <div class="header">
+        <!-- Navigation link back to orders page -->
+        <a routerLink="/orders" class="back-link">← Back to Orders</a>
+
+        <!-- Page title -->
+        <h2>Order Tracking</h2>
+    </div>
+
+    <!-- Loading state -->
+    <!-- Shown only while data is being fetched -->
+    <div *ngIf="loading" class="loading">
+        Loading order details...
+    </div>
+
+    <!-- Error state -->
+    <!-- Shown only if an error message exists -->
+    <div *ngIf="errorMessage" class="error">
+        {{ errorMessage }}
+    </div>
+
+    <!-- Main content -->
+    <!-- Rendered only when loading is false AND order data exists -->
+    <div *ngIf="!loading && order" class="order-details">
+
+        <!-- ========================= -->
+        <!-- Order Header Section -->
+        <!-- ========================= -->
+        <div class="order-header">
+
+            <!-- Order basic info -->
+            <div class="order-info">
+                <!-- Order ID -->
+                <h3>Order #{{ order.id }}</h3>
+
+                <!-- Order creation date formatted using Angular DatePipe -->
+                <p class="order-date">
+                    Placed on {{ order.created_at | date:'medium' }}
+                </p>
+            </div>
+
+            <!-- Order status badge -->
+            <!-- CSS class changes based on order status -->
+            <span [class]="'order-status ' + getStatusClass(order.status)">
+                {{ order.status }}
+            </span>
+        </div>
+
+        <!-- ========================= -->
+        <!-- Progress Tracker -->
+        <!-- ========================= -->
+        <div class="progress-tracker">
+
+            <!-- Horizontal progress bar -->
+            <div class="progress-bar">
+                <!-- Width is dynamically set using percentage -->
+                <div
+                    class="progress-fill"
+                    [style.width.%]="getProgressPercentage(order.status)">
+                </div>
+            </div>
+
+            <!-- Step indicators -->
+            <div class="progress-steps">
+
+                <!-- Pending step -->
+                <div class="step"
+                     [class.active]="getProgressPercentage(order.status) >= 25">
+                    <div class="step-circle"></div>
+                    <p>Pending</p>
+                </div>
+
+                <!-- Processing step -->
+                <div class="step"
+                     [class.active]="getProgressPercentage(order.status) >= 50">
+                    <div class="step-circle"></div>
+                    <p>Processing</p>
+                </div>
+
+                <!-- Shipped step -->
+                <div class="step"
+                     [class.active]="getProgressPercentage(order.status) >= 75">
+                    <div class="step-circle"></div>
+                    <p>Shipped</p>
+                </div>
+
+                <!-- Delivered step -->
+                <div class="step"
+                     [class.active]="getProgressPercentage(order.status) >= 100">
+                    <div class="step-circle"></div>
+                    <p>Delivered</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================= -->
+        <!-- Order Items -->
+        <!-- ========================= -->
+        <div class="section">
+            <h4>Order Item</h4>
+
+            <div class="items-list">
+                <div class="order-item">
+
+                    <!-- Product details -->
+                    <div class="item-info">
+                        <!-- Handles multiple backend response formats safely -->
+                        <h5>
+                            {{ order.product_name
+                               || order.product?.name
+                               || 'Product #' + order.product }}
+                        </h5>
+
+                        <!-- Quantity -->
+                        <p>Quantity: {{ order.quantity }}</p>
+                    </div>
+
+                    <!-- Item price formatted with number pipe -->
+                    <p class="item-price">
+                        ₹{{ order.price | number:'1.2-2' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================= -->
+        <!-- Shipping Address -->
+        <!-- ========================= -->
+        <!-- Shown only if shipping address exists -->
+        <div class="section" *ngIf="order.shipping_address">
+            <h4>Shipping Address</h4>
+
+            <div class="address-box">
+                <p>{{ order.shipping_address.address }}</p>
+                <p>
+                    {{ order.shipping_address.city }},
+                    {{ order.shipping_address.state }}
+                    {{ order.shipping_address.pincode }}
+                </p>
+                <p>{{ order.shipping_address.country }}</p>
+            </div>
+        </div>
+
+        <!-- ========================= -->
+        <!-- Order Summary -->
+        <!-- ========================= -->
+        <div class="section">
+            <h4>Order Summary</h4>
+
+            <div class="summary-box">
+                <!-- Subtotal calculation -->
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>
+                        ₹{{ order.price * order.quantity | number:'1.2-2' }}
+                    </span>
+                </div>
+
+                <!-- Final total -->
+                <div class="summary-row total">
+                    <span><strong>Total:</strong></span>
+                    <span>
+                        <strong>
+                            ₹{{ order.total_price | number:'1.2-2' }}
+                        </strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
