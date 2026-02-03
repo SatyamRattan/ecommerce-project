@@ -68,78 +68,89 @@ import { OrderTracking } from './pages/orders/order-tracking/order-tracking';
 // Contact / support page
 import { ContactUs } from './pages/contact/contact-us/contact-us';
 
+// Admin: Contact Inbox dashboard
+import { ContactInbox } from './pages/admin/contact-inbox/contact-inbox';
+
+// About Us page
+import { About } from './pages/about/about';
+
 /**
  * Application route configuration
- * This array is consumed by RouterModule / provideRouter()
  */
 export const routes: Routes = [
 
-  /**
-   * Default route
-   * When user opens `/`, redirect them to `/categories`
-   * pathMatch: 'full' ensures exact match of empty path
-   */
-  { path: '', redirectTo: 'categories', pathMatch: 'full' },
+   /**
+    * Default route
+    * When user opens `/`, redirect them to `/categories`
+    * pathMatch: 'full' ensures exact match of empty path
+    */
+   { path: '', redirectTo: 'categories', pathMatch: 'full' },
 
-  /* ========= AUTH ROUTES ========= */
+   /* ========= AUTH ROUTES ========= */
 
-  // Login page
-  { path: 'login', component: Login },
+   // Login page
+   { path: 'login', component: Login },
 
-  // Register page
-  { path: 'register', component: Register },
+   // Register page
+   { path: 'register', component: Register },
 
-  // Profile page (should ideally be protected by Auth Guard)
-  { path: 'profile', component: Profile },
+   // Profile page (should ideally be protected by Auth Guard)
+   { path: 'profile', component: Profile },
 
-  /* ========= SHOP ROUTES ========= */
+   /* ========= SHOP ROUTES ========= */
 
-  // Categories listing
-  { path: 'categories', component: Categories },
+   // Categories listing
+   { path: 'categories', component: Categories },
 
-  // Products listing
-  { path: 'products', component: Products },
+   // Products listing
+   { path: 'products', component: Products },
 
-  /**
-   * Product details page
-   * `:id` is a dynamic route parameter
-   * Example: /product/12
-   */
-  { path: 'product/:id', component: ProductDetails },
+   /**
+    * Product details page
+    * `:id` is a dynamic route parameter
+    * Example: /product/12
+    */
+   { path: 'product/:id', component: ProductDetails },
 
-  // Wishlist page
-  { path: 'wishlist', component: Wishlist },
+   // Wishlist page
+   { path: 'wishlist', component: Wishlist },
 
-  /* ========= CART ========= */
+   /* ========= CART ========= */
 
-  // Shopping cart page
-  { path: 'cart', component: Cart },
+   // Shopping cart page
+   { path: 'cart', component: Cart },
 
-  /* ========= CHECKOUT FLOW ========= */
+   /* ========= CHECKOUT FLOW ========= */
 
-  // Checkout step 1: Address
-  { path: 'checkout/address', component: Address },
+   // Checkout step 1: Address
+   { path: 'checkout/address', component: Address },
 
-  // Checkout step 2: Payment
-  { path: 'checkout/payment', component: Payment },
+   // Checkout step 2: Payment
+   { path: 'checkout/payment', component: Payment },
 
-  // Checkout step 3: Confirmation
-  { path: 'checkout/confirmation', component: OrderConfirmation },
+   // Checkout step 3: Confirmation
+   { path: 'checkout/confirmation', component: OrderConfirmation },
 
-  /* ========= ORDERS ========= */
+   /* ========= ORDERS ========= */
 
-  // View all orders
-  { path: 'orders', component: MyOrders },
+   // View all orders
+   { path: 'orders', component: MyOrders },
 
-  /**
-   * Track a specific order
-   * Dynamic order ID
-   * Example: /orders/track/101
-   */
-  { path: 'orders/track/:id', component: OrderTracking },
+   /**
+    * Track a specific order
+    * Dynamic order ID
+    * Example: /orders/track/101
+    */
+   { path: 'orders/track/:id', component: OrderTracking },
 
-  /* ========= SUPPORT ========= */
+   /* ========= SUPPORT ========= */
 
-  // Contact / help page
-  { path: 'contact', component: ContactUs },
+   // Contact / help page
+   { path: 'contact', component: ContactUs },
+
+   // Admin: Contact Inbox
+   { path: 'admin/contact-messages', component: ContactInbox },
+
+   // About Us page
+   { path: 'about', component: About },
 ];

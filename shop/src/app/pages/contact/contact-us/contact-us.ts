@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 // FormsModule allows use of [(ngModel)] for two-way binding
 import { Router } from '@angular/router';
-import { ContactUs as ContactUsService } from '../../../services/contact-us'; 
+import { ContactUs as ContactUsService } from '../../../services/contact-us';
 // Importing the ContactUs service to send messages to backend
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule], 
+  imports: [CommonModule, FormsModule],
   // Standalone component using CommonModule and FormsModule
   templateUrl: './contact-us.html',
   styleUrl: './contact-us.css'
@@ -22,6 +22,7 @@ export class ContactUs {
   form = {
     name: '',
     email: '',
+    subject: '',
     message: ''
   };
 
@@ -31,8 +32,8 @@ export class ContactUs {
   // Function triggered on form submission
   submit() {
     // Validate that all fields are filled
-    if (!this.form.name || !this.form.email || !this.form.message) {
-      if (typeof alert !== 'undefined') alert('All fields required');
+    if (!this.form.name || !this.form.email || !this.form.subject || !this.form.message) {
+      if (typeof alert !== 'undefined') alert('All fields required including Subject');
       return; // Stop submission if validation fails
     }
 
@@ -42,7 +43,7 @@ export class ContactUs {
         // Success callback
         console.log('Message sent successfully', response);
         this.submitted = true; // mark form as submitted
-        this.form = { name: '', email: '', message: '' }; 
+        this.form = { name: '', email: '', subject: '', message: '' };
         // Reset form fields
         if (typeof alert !== 'undefined') alert('Message sent successfully!');
       },

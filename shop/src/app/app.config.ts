@@ -1,19 +1,3 @@
-// import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-// import { provideRouter } from '@angular/router';
-
-// import { routes } from './app.routes';
-// import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-// import { provideHttpClient, withInterceptors } from '@angular/common/http';
-// import { authInterceptor } from './auth.interceptor';
-
-// export const appConfig: ApplicationConfig = {
-//   providers: [
-//     provideHttpClient(withInterceptors([authInterceptor])),
-//     provideBrowserGlobalErrorListeners(),
-//     provideRouter(routes), provideClientHydration(withEventReplay())
-//   ]
-// };
-
 // Import type for application-wide configuration
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 
@@ -25,6 +9,9 @@ import { routes } from './app.routes';
 
 // Import functions for client-side hydration (useful for SSR / pre-rendering) and event replay
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+
+// Import provideAnimations for Angular animations support
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 // Import HttpClient and ability to add interceptors globally
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -49,7 +36,11 @@ export const appConfig: ApplicationConfig = {
     // 4️⃣ Enable client-side hydration
     //    - Useful if your app uses SSR (server-side rendering)
     //    - withEventReplay() replays DOM events captured during SSR to client
-    provideClientHydration(withEventReplay())
+    provideClientHydration(withEventReplay()),
+
+    // 5️⃣ Enable Angular animations
+    //    - Required for @angular/animations to work (slide, fade, etc.)
+    provideAnimations()
   ]
 };
 

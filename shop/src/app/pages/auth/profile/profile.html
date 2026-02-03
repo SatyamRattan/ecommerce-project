@@ -1,55 +1,143 @@
-<div class="profile-container">
-    <!-- Container for the entire profile page -->
-
-    <h2>My Profile</h2>
-    <!-- Page heading -->
-
-    <div *ngIf="loading" class="loading">
-        Loading profile...
-    </div>
-    <!-- Show this loading message while the profile data is being fetched -->
-
-    <div *ngIf="error" class="error">
-        {{ error }}
-    </div>
-    <!-- Display any error messages from the component, e.g., failed API call -->
-
-    <div *ngIf="user" class="profile-details">
-        <!-- Only show profile details if the user object exists -->
-
-        <div class="profile-item">
-            <strong>Name:</strong> {{ user.name }}
+<div class="profile-page">
+    <!-- Profile Hero Header -->
+    <header class="profile-hero">
+        <div class="container hero-content">
+            <div class="avatar-wrapper">
+                <div class="avatar-circle">
+                    <span>{{ (user$ | async)?.name?.charAt(0) || 'U' }}</span>
+                </div>
+            </div>
+            <div class="user-intro">
+                <h1>Welcome, {{ (user$ | async)?.name }}</h1>
+                <p>Manage your account settings and preferences.</p>
+            </div>
         </div>
-        <!-- Display user's name -->
+    </header>
 
-        <div class="profile-item">
-            <strong>Email:</strong> {{ user.email }}
+    <div class="container main-content">
+        <div *ngIf="user$ | async as user; else loadingOrError">
+            <div class="profile-card" [class.editing]="editMode">
+                <div class="card-header">
+                    <h2>{{ editMode ? 'Edit Profile' : 'Account Information' }}</h2>
+                    <button *ngIf="!editMode" (click)="startEdit(user)" class="edit-btn">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2"
+                            fill="none">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Edit Profile
+                    </button>
+                </div>
+
+                <!-- Success Message -->
+                <div *ngIf="successMessage" class="success-alert">
+                    {{ successMessage }}
+                </div>
+
+                <!-- Error Message -->
+                <div *ngIf="error && editMode" class="error-alert">
+                    {{ error }}
+                </div>
+
+                <!-- View Mode -->
+                <div class="details-grid" *ngIf="!editMode">
+                    <div class="detail-item">
+                        <label>Full Name</label>
+                        <div class="value">{{ user.name }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email Address</label>
+                        <div class="value">{{ user.email }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone Number</label>
+                        <div class="value">{{ user.phone || 'Not provided' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Gender</label>
+                        <div class="value">{{ user.gender || 'Not specified' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Date of Birth</label>
+                        <div class="value">{{ user.dob || 'Not provided' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Shipping Address</label>
+                        <div class="value">{{ user.address || 'Not provided' }}</div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div class="edit-form" *ngIf="editMode">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" [(ngModel)]="editUserData.name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email (Read-only)</label>
+                            <input type="email" [value]="user.email" disabled class="disabled-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" [(ngModel)]="editUserData.phone" placeholder="Enter phone number">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select [(ngModel)]="editUserData.gender">
+                                <option value="MALE">Male</option>
+                                <option value="FEMALE">Female</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" [(ngModel)]="editUserData.dob">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Shipping Address</label>
+                            <textarea [(ngModel)]="editUserData.address" rows="3"
+                                placeholder="Enter your full shipping address"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <ng-container *ngIf="!editMode">
+                        <button (click)="logout()" class="logout-btn">
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Logout from Account
+                        </button>
+                    </ng-container>
+                    <ng-container *ngIf="editMode">
+                        <div class="edit-actions">
+                            <button (click)="cancelEdit()" class="cancel-btn" [disabled]="saving">Cancel</button>
+                            <button (click)="saveProfile()" class="save-btn" [disabled]="saving">
+                                {{ saving ? 'Saving Changes...' : 'Save Changes' }}
+                            </button>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
         </div>
-        <!-- Display user's email -->
 
-        <div class="profile-item">
-            <strong>Phone:</strong> {{ user.phone || 'N/A' }}
-        </div>
-        <!-- Display user's phone number, fallback to 'N/A' if empty -->
-
-        <div class="profile-item">
-            <strong>Gender:</strong> {{ user.gender }}
-        </div>
-        <!-- Display user's gender -->
-
-        <div class="profile-item">
-            <strong>Date of Birth:</strong> {{ user.dob || 'N/A' }}
-        </div>
-        <!-- Display user's date of birth, fallback to 'N/A' if empty -->
-
-        <div class="profile-item">
-            <strong>Address:</strong> {{ user.address || 'N/A' }}
-        </div>
-        <!-- Display user's address, fallback to 'N/A' if empty -->
-
-        <button (click)="logout()" class="logout-btn">
-            Logout
-        </button>
-        <!-- Logout button triggers the logout() method in the component -->
+        <ng-template #loadingOrError>
+            <div *ngIf="error; else loadingTpl" class="error-state">
+                <div class="error-icon">⚠️</div>
+                <p>{{ error }}</p>
+                <button (click)="ngOnInit()" class="retry-btn">Try Again</button>
+            </div>
+            <ng-template #loadingTpl>
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Fetching your personal details...</p>
+                </div>
+            </ng-template>
+        </ng-template>
     </div>
 </div>

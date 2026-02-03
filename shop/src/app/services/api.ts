@@ -22,7 +22,7 @@ export class Api {
   /**
    * Inject HttpClient so this service can communicate with the backend
    */
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Fetches the complete list of products
@@ -55,5 +55,16 @@ export class Api {
    */
   getProduct(id: number): Observable<any> {
     return this.http.get(`${this.BASE_URL}/products/${id}/`);
+  }
+
+  /**
+   * Fetches variants for a specific product
+   * Specified endpoint: /api/cart/productvariant/
+   */
+  getProductVariants(productId: number): Observable<any> {
+    const url = 'http://127.0.0.1:8000/api/cart/productvariant/';
+    return this.http.get(url, {
+      params: { product: productId.toString() }
+    });
   }
 }

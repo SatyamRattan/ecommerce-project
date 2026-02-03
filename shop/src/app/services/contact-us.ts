@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 
 // HttpClient is used to send HTTP requests to the backend
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 // Observable represents asynchronous data streams from HTTP calls
 import { Observable } from 'rxjs';
@@ -45,6 +45,27 @@ export class ContactUs {
       `${this.BASE_URL}/contact/`,
       data
     );
+  }
+
+  /**
+   * Admin: Fetch filtered contact messages
+   */
+  getMessages(filters: any = {}): Observable<any> {
+    let params = new HttpParams();
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        params = params.set(key, filters[key]);
+      }
+    });
+
+    return this.http.get(`${this.BASE_URL}/contact/`, { params });
+  }
+
+  /**
+   * Admin: Update message status (READ, RESOLVED, etc.)
+   */
+  updateMessageStatus(id: number, status: string): Observable<any> {
+    return this.http.patch(`${this.BASE_URL}/contact/${id}/`, { status });
   }
 
 }

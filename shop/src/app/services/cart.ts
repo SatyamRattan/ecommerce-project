@@ -33,6 +33,7 @@ export class Cart {
    * This allows cart persistence before login
    */
   private GUEST_CART_KEY = 'guest_cart';
+  private CART_KEY = 'cart_items'; // persist cart across pages & refresh
 
   /**
    * BehaviorSubject stores the current cart items in memory
@@ -120,6 +121,7 @@ export class Cart {
 
         // Update in-memory cart state
         this.cartItems.next(items);
+        this.saveCart(items); // keep cart synced with storage
       },
       error: (err) =>
         console.error('[Cart Service] Failed to refresh cart:', err)
@@ -156,8 +158,9 @@ export class Cart {
    *
    * @param productOrId - Full product object or product ID
    * @param quantity - Number of items to add
+   * @param variant_id - ID of the selected variant (required if product has variants)
    */
-  addToCart(productOrId: any, quantity: number = 1): Observable<any> {
+  addToCart(productOrId: any, quantity: number = 1, variant_id: number | null = null): Observable<any> {
     const isObject = typeof productOrId === 'object' && productOrId !== null;
     const productId = isObject ? productOrId.id : productOrId;
 
@@ -167,19 +170,19 @@ export class Cart {
     if (!this.isAuthenticated()) {
       const items = this.cartItems.value;
 
-      // Find existing product in guest cart
+      // Find existing product in guest cart (matching both product and variant)
       const existing = items.find(
-        i => (i.product?.id || i.product) === productId
+        i => (i.product?.id || i.product) === productId && i.variant_id === variant_id
       );
 
-      // Increase quantity if product already exists
+      // Increase quantity if product with same variant already exists
       if (existing) {
         existing.quantity += quantity;
       } else {
         // Store product info for guest cart
-        // Using the full object if provided maintains name/price on reload
         items.push({
           product: isObject ? productOrId : { id: productId },
+          variant_id: variant_id,
           quantity,
           is_guest: true
         });
@@ -200,11 +203,11 @@ export class Cart {
 
     // If user ID is already cached
     if (userId) {
-      // const payload = { user: userId, product: productId, quantity };
-      const payload = {
-  product_id: productId,
-  quantity
-};
+      const payload: any = {
+        product_id: productId,
+        quantity,
+        variant_id: variant_id
+      };
 
 
       return this.http.post(this.buildUrl('/cart/'), payload).pipe(
@@ -223,14 +226,10 @@ export class Cart {
           throw new Error('Could not identify user');
         }
 
-        // const payload = {
-        //   user: freshUserId,
-        //   product: productId,
-        //   quantity
-        // };
-        const payload = {
+        const payload: any = {
           product_id: productId,
-          quantity
+          quantity,
+          variant_id: variant_id
         };
 
 
@@ -275,7 +274,7 @@ export class Cart {
      * forkJoin executes all requests in parallel
      */
     const requests = guestItems.map((item: any) =>
-      this.addToCart(item.product.id, item.quantity)
+      this.addToCart(item.product.id, item.quantity, item.variant_id)
     );
 
     // Execute migration and cleanup
@@ -298,20 +297,21 @@ export class Cart {
    * Updates quantity of a cart item
    * Accepts itemId (for auth) or productId (for guest)
    */
-  updateCartItem(id: number, quantity: number): Observable<any> {
+  updateCartItem(id: number, quantity: number, variantId: number | null = null): Observable<any> {
     // Check if user is NOT authenticated (Guest mode)
     if (!this.isAuthenticated()) {
       // Get current items from BehaviorSubject
       const items = this.cartItems.value;
 
-      // Find item by product ID (since guests don't have cart item IDs)
-      const item = items.find(i => (i.product?.id || i.product) === id);
+      // Find item by product ID AND variant ID
+      const item = items.find(i => (i.product?.id || i.product) === id && i.variant_id === variantId);
 
       // If item found, update its quantity
       if (item) {
         item.quantity = quantity;
         // Save updated list to localStorage and BehaviorSubject
         this.saveGuestCart(items);
+        this.saveCart(items); // keep cart synced with storage
       }
 
       // Return success observable
@@ -327,17 +327,18 @@ export class Cart {
   /**
    * Removes an item from cart
    */
-  removeFromCart(id: number): Observable<any> {
+  removeFromCart(id: number, variantId: number | null = null): Observable<any> {
     // Check if user is NOT authenticated (Guest mode)
     if (!this.isAuthenticated()) {
       // Get current items
       const items = this.cartItems.value;
 
-      // Filter out the item to remove (matching by product ID)
-      const newItems = items.filter(i => (i.product?.id || i.product) !== id);
+      // Filter out the item to remove (matching by product ID AND variant ID)
+      const newItems = items.filter(i => !((i.product?.id || i.product) === id && i.variant_id === variantId));
 
       // Save updated list to localStorage
       this.saveGuestCart(newItems);
+      this.saveCart(newItems); // keep cart synced with storage
 
       // Return success observable
       return of({ success: true });
@@ -356,5 +357,18 @@ export class Cart {
     return this.http
       .delete(this.buildUrl('/cart/clear/'))
       .pipe(tap(() => this.refreshCart()));
+  }
+
+  saveCart(items: any[]) {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.CART_KEY, JSON.stringify(items)); // save cart
+    }
+  }
+
+  loadCart(): any[] {
+    if (typeof localStorage !== 'undefined') {
+      return JSON.parse(localStorage.getItem(this.CART_KEY) || '[]'); // restore cart
+    }
+    return [];
   }
 }

@@ -7,25 +7,43 @@
         <a routerLink="/" class="logo">Shop</a>
         <!-- Logo of the website, clicking navigates to home page -->
 
+        <!-- Search bar container -->
+        <div class="search-container">
+            <!-- Search input field bound to searchQuery property -->
+            <!-- (keyup.enter) triggers search when user presses Enter key -->
+            <input type="text" class="search-input" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()"
+                placeholder="Search products..." aria-label="Search products">
+
+            <!-- Search button that triggers the same search action -->
+            <button class="search-btn" (click)="onSearch()" aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </button>
+        </div>
+
+
         <ul class="nav-links">
             <!-- Primary navigation links -->
 
             <li>
-                <a routerLink="/categories" routerLinkActive="active">
+                <a routerLink="/categories" routerLinkActive="active-link">
                     Categories
                 </a>
                 <!-- Navigates to product categories page; adds 'active' class when URL matches -->
             </li>
 
             <li>
-                <a routerLink="/wishlist" routerLinkActive="active">
+                <a routerLink="/wishlist" routerLinkActive="active-link">
                     Wishlist
                 </a>
                 <!-- Navigates to the user's wishlist; highlights when active -->
             </li>
 
             <li>
-                <a routerLink="/contact" routerLinkActive="active">
+                <a routerLink="/contact" routerLinkActive="active-link">
                     Contact
                 </a>
                 <!-- Navigates to contact page; highlights when active -->
@@ -43,43 +61,54 @@
                 </a>
             </li>
 
-            <li>
-                <a routerLink="/orders" routerLinkActive="active">
-                    Orders
-                </a>
-                <!-- Navigates to user's orders page -->
-            </li>
+            <!-- Auth-dependent items: Wait for auth initialization to prevent flicker -->
+            <ng-container *ngIf="auth.authLoaded$ | async">
 
-            <!-- List item for the login section, only visible when NOT logged in -->
-            <li *ngIf="!isLoggedIn()" class="login-container">
-                <!-- Login navigation link that wraps the icon and text -->
-                <a routerLink="/login" routerLinkActive="active" class="login-btn">
-                    <!-- Label for the login button -->
-                    <span class="login-text">Login</span>
-                </a>
-            </li>
+                <!-- 
+                  Authentication Logic:
+                  Using ngIf-else to guarantee that EITHER the Login button 
+                  OR the authenticated links (Orders/Profile/Logout) are shown, 
+                  never both at the same time.
+                -->
+                <ng-container *ngIf="isLoggedIn; else loginTmpl">
+                    <!-- Render authenticated-only navigation items -->
+                    <li>
+                        <a routerLink="/orders" routerLinkActive="active">
+                            Orders
+                        </a>
+                    </li>
 
-            <!-- List item for the profile section, only visible when logged in -->
-            <li *ngIf="isLoggedIn()" class="profile-container">
-                <!-- Profile navigation link that wraps the icon and text -->
-                <a routerLink="/profile" routerLinkActive="active" class="profile-btn">
-                    <!-- Circular icon container for the user ID -->
-                    <div class="profile-icon">
-                        <!-- Displays the first character of user ID or placeholder -->
-                        {{ userId ? (userId.toString() | slice:0:1) : 'U' }}
-                    </div>
-                    <!-- Label for the profile button -->
-                    <span class="profile-text">Profile</span>
-                </a>
-            </li>
+                    <!-- Render profile section -->
+                    <li class="profile-container">
+                        <a routerLink="/profile" routerLinkActive="active" class="profile-btn">
+                            <div class="profile-icon">
+                                {{ userInitial }}
+                            </div>
+                            <span class="profile-text">
+                                <span *ngIf="userName as name">{{ name }}</span>
+                                <span *ngIf="!userName">Profile</span>
+                            </span>
+                        </a>
+                    </li>
 
-            <li *ngIf="isLoggedIn()">
-                <!-- Logout link with href to ensure correct click behavior (no double click need) -->
-                <a href="javascript:void(0)" (click)="logout()" style="cursor: pointer;">
-                    Logout
-                </a>
-                <!-- Shows logout button only if user IS logged in; triggers logout method -->
-            </li>
+                    <!-- Render logout option -->
+                    <li>
+                        <a href="javascript:void(0)" (click)="logout()" style="cursor: pointer;">
+                            Logout
+                        </a>
+                    </li>
+                </ng-container>
+
+                <!-- Template for Login link (Logged Out state) -->
+                <ng-template #loginTmpl>
+                    <li class="login-container">
+                        <a routerLink="/login" routerLinkActive="active" class="login-btn">
+                            <span class="login-text">Login</span>
+                        </a>
+                    </li>
+                </ng-template>
+
+            </ng-container>
         </ul>
     </div>
 </nav>

@@ -1,40 +1,99 @@
-<!-- Container for the product details page -->
-<!-- *ngIf="product" ensures this section only renders when the product data is loaded -->
-<div class="product-container" *ngIf="product">
+<div class="product-details-page" *ngIf="product">
+  <div class="container">
+    <!-- Breadcrumbs or simple back link could go here -->
 
-  <!-- Box wrapping the product info -->
-  <div class="product-box">
-    
-    <!-- Product Name -->
-    <h1>{{ product.name }}</h1>
-    
-    <!-- Product Price -->
-    <!-- Uses discount price if available, otherwise shows base price -->
-    <p class="price">
-      ₹{{ product.discount_price || product.base_price }}
-    </p>
+    <div class="product-main-card">
+      <!-- Left Column: Image Gallery -->
+      <div class="product-gallery-container">
+        <!-- Thumbnail Sidebar -->
+        <div class="thumbnail-sidebar" *ngIf="product.media && product.media.length > 1">
+          <div *ngFor="let m of product.media" class="thumbnail-box" [class.active]="selectedImage === m.file"
+            (click)="selectedImage = m.file">
+            <img [src]="m.file" alt="Thumbnail">
+          </div>
+        </div>
 
-    <!-- Stock status -->
-    <!-- Shown if stock is greater than 0 -->
-    <p class="stock" *ngIf="product.stock > 0">In Stock</p>
+        <!-- Main Product View -->
+        <div class="product-image-container">
+          <img [src]="selectedImage || 'assets/images/placeholder.jpg'" [alt]="product.name" class="featured-image">
+          <button (click)="toggleWishlist()" [class.active]="wishlist.wishlistedIds().has(product.id)"
+            class="floating-wishlist-btn">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+              </path>
+            </svg>
+          </button>
+        </div>
+      </div>
 
-    <!-- Out of stock message -->
-    <!-- Shown if stock is exactly 0 -->
-    <p class="out" *ngIf="product.stock === 0">Out of Stock</p>
+      <!-- Right Column: Product Info -->
+      <div class="product-info-panel">
+        <div class="product-header">
+          <div class="category-pill">{{ product.category_name || 'Premium Series' }}</div>
+          <h1>{{ product.name }}</h1>
+          <div class="price-row">
+            <span class="current-price">₹{{ displayPrice }}</span>
+            <span class="stock-status" [class.out-of-stock]="(product.stock ?? 0) <= 0">
+              {{ (product.stock ?? 0) > 0 ? (product.stock + ' Items in Stock') : 'Currently Out of Stock' }}
+            </span>
+          </div>
+        </div>
 
-    <!-- Product Description -->
-    <!-- Fallback text if description is empty -->
-    <p class="description">
-      {{ product.description || 'No description available.' }}
-    </p>
+        <div class="product-description">
+          <p>{{ product.description || 'Experience the perfect blend of quality and craftsmanship with our latest
+            selection. This product is designed with modern aesthetics and durability in mind.' }}</p>
+        </div>
 
-    <!-- Add to Cart Button -->
-    <!-- Calls the addToCart() method in the component -->
-    <button (click)="addToCart()">Add to Cart</button>
+        <!-- Variants -->
+        <div class="variants-section" *ngIf="hasVariants">
+          <div class="variant-group" *ngFor="let group of groupedVariants | keyvalue">
+            <label>{{ group.key | titlecase }}</label>
+            <div class="chip-grid">
+              <button *ngFor="let v of group.value" class="chip-btn" [class.selected]="selectedVariant?.id === v.id"
+                (click)="selectVariant(v)">
+                {{ v.variant_value | titlecase }}
+              </button>
+            </div>
+          </div>
+          <p class="selection-notice" *ngIf="!selectedVariant">Please select an option to continue</p>
+        </div>
 
-    <!-- Add to Wishlist Button -->
-    <!-- Calls the addToWishlist() method in the component -->
-    <button (click)="addToWishlist()" class="wishlist-btn">Add to Wishlist</button>
+        <div class="action-grid">
+          <button (click)="addToCart()" class="add-to-cart-big"
+            [disabled]="hasVariants && !selectedVariant || (product.stock ?? 0) <= 0">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span>Add to Shopping Bag</span>
+          </button>
+        </div>
 
+        <!-- Trust Features -->
+        <div class="trust-features">
+          <div class="feature-item">
+            <span class="icon">🚚</span>
+            <span>Fast & Free Delivery</span>
+          </div>
+          <div class="feature-item">
+            <span class="icon">🛡️</span>
+            <span>2-Year Warranty</span>
+          </div>
+          <div class="feature-item">
+            <span class="icon">🔄</span>
+            <span>Easy 30-Day Returns</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews-wrapper" *ngIf="product.id">
+      <app-product-reviews [productId]="product.id"></app-product-reviews>
+    </div>
   </div>
 </div>

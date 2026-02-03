@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common'; // CommonModule provides common 
 export class Login {
   loginForm: FormGroup;                 // Reactive form object storing email and password fields
   errorMessage: string = '';            // String to hold error messages for display in template
+  showPassword: boolean = false;        // Toggle for password visibility
 
   constructor(
     private fb: FormBuilder,            // FormBuilder for easy form control creation
@@ -57,7 +58,7 @@ export class Login {
             err.error?.message ||                   // Generic error message
             err.message ||                          // Fallback JS error message
             'Unknown error';                        // Ultimate fallback if nothing else
-          
+
           // Store the message for display in the template
           this.errorMessage = 'Login failed: ' + detail;
 

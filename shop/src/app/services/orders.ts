@@ -21,7 +21,7 @@ export class Orders {
    */
   private BASE_URL = 'http://127.0.0.1:8000/api/orders';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Utility method to safely construct API URLs
@@ -92,6 +92,16 @@ export class Orders {
       this.buildUrl(`/order/${id}/`),
       { status: 'cancelled' }
     );
+  }
+
+  /**
+   * Fetch order tracking history
+   *
+   * @param id - Order ID
+   */
+  getOrderHistory(id: number): Observable<any> {
+    // Try /history/ if /track/ fails, or stick to the most likely standard DRF path
+    return this.http.get(this.buildUrl(`/order/${id}/history/`));
   }
 }
 

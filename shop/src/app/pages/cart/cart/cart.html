@@ -1,116 +1,103 @@
-<div class="cart-container">
-  <!-- Main container for the cart page. All cart-related content is wrapped here. -->
-
-  <h2>My Shopping Cart</h2>
-  <!-- Page title -->
-
-  <div *ngIf="loading" class="loading">
-    Loading cart...
+<div class="cart-page-container">
+  <div class="header-section">
+    <h1 class="page-title">Shopping Cart</h1>
+    <button *ngIf="(cartItems$ | async)?.length" (click)="clearCart()" class="clear-all-btn">
+      <span class="icon">🗑️</span> Clear All
+    </button>
   </div>
-  <!-- Show this div if `loading` is true (cart data is being fetched). 
-       The *ngIf directive conditionally renders elements in Angular. -->
 
-  <div *ngIf="errorMessage" class="error">
+  <div *ngIf="errorMessage" class="error-banner">
+    <span class="error-icon">⚠️</span>
     {{ errorMessage }}
   </div>
-  <!-- Show error message if `errorMessage` is non-empty.
-       Interpolation {{ }} is used to display dynamic values from component. -->
 
-  <div *ngIf="!loading && cartItems.length === 0" class="empty-cart">
-    <p>Your cart is empty</p>
-    <a routerLink="/products" class="continue-shopping">
-      Continue Shopping
-    </a>
-    <!-- If cart is loaded but empty, show a message and link back to products page.
-         routerLink directive is used to navigate without reloading the page. -->
-  </div>
+  <div *ngIf="cartItems$ | async as cartItems; else loadingTpl">
+    <!-- Empty State -->
+    <div *ngIf="cartItems.length === 0" class="empty-state-card">
+      <div class="empty-icon-wrapper">🛒</div>
+      <h3 class="empty-title">Your cart is empty</h3>
+      <p class="empty-text">Looks like you haven't added anything to your cart yet. Explore our categories to find
+        amazing products!</p>
+      <a routerLink="/categories" class="primary-btn pulse">Start Shopping</a>
+    </div>
 
-  <div *ngIf="!loading && cartItems.length > 0">
-    <!-- Display this section only if cart has items and is not loading -->
+    <!-- Cart Layout -->
+    <div *ngIf="cartItems.length > 0" class="cart-grid">
 
-    <div class="cart-items">
-      <!-- Container for the list of cart items -->
-
-      <div *ngFor="let item of cartItems" class="cart-item">
-        <!-- Loop through each item in cartItems array using *ngFor directive -->
-
-        <div class="item-details">
-          <!-- Container for product name and price -->
-
-          <h4>{{ item.product?.name || item.name }}</h4>
-          <!-- Display product name from item.product.name if exists, 
-               else fallback to item.name (optional chaining prevents errors if product is null) -->
-
-          <p class="item-price">
-            ₹{{ (item.product?.discount_price || item.product?.base_price || item.product?.price || item.price) |
-            number:'1.2-2' }}
-          </p>
-          <!-- Show product price. Use Angular number pipe to format price with 2 decimals -->
-        </div>
-
-        <div class="item-controls">
-          <!-- Controls for quantity, subtotal, and remove -->
-
-          <div class="quantity-controls">
-            <!-- Buttons to decrease/increase quantity -->
-
-            <button (click)="updateQuantity(item, item.quantity - 1)" [disabled]="item.quantity <= 1">
-              -
-            </button>
-            <!-- Call component method updateQuantity with quantity decreased by 1
-                 Disable button if quantity <= 1 to prevent invalid quantity -->
-
-            <span class="quantity">{{ item.quantity }}</span>
-            <!-- Show current quantity -->
-
-            <button (click)="updateQuantity(item, item.quantity + 1)">
-              +
-            </button>
-            <!-- Call updateQuantity to increase quantity by 1 -->
+      <!-- List of Items -->
+      <div class="cart-items-list">
+        <div *ngFor="let item of cartItems" class="cart-item-card">
+          <div class="item-img-placeholder">
+            <span class="placeholder-icon">📦</span>
           </div>
 
-          <p class="item-subtotal">
-            Subtotal: ₹{{ (item.product?.discount_price || item.product?.base_price || item.product?.price ||
-            item.price) * item.quantity | number:'1.2-2' }}
-          </p>
-          <!-- Calculate subtotal for this item: price × quantity
-               Format with 2 decimal places -->
+          <div class="item-info">
+            <h3 class="item-name">{{ item.product?.name || item.name }}</h3>
+            <div class="item-meta" *ngIf="item.variant">
+              <span class="variant-tag">{{ item.variant.variant_type }}: {{ item.variant.variant_value }}</span>
+            </div>
+            <div class="item-price-tag">₹{{ item.price | number:'1.2-2' }}</div>
+          </div>
 
-          <button (click)="removeItem(item)" class="remove-btn">
-            Remove
-          </button>
-          <!-- Calls removeItem(item) to delete this item from cart -->
+          <div class="item-actions">
+            <div class="qty-selector">
+              <button (click)="updateQuantity(item, item.quantity - 1)" [disabled]="item.quantity <= 1"
+                class="qty-btn">-</button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button (click)="updateQuantity(item, item.quantity + 1)" class="qty-btn">+</button>
+            </div>
+
+            <button (click)="removeItem(item)" class="remove-link">
+              <span class="trash-icon">🗑️</span> Remove
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="summary-sticky-wrapper">
+        <div class="summary-card">
+          <h2 class="summary-title">Order Summary</h2>
+
+          <div class="summary-details">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span class="value">₹{{ total$ | async | number:'1.2-2' }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span class="value free">FREE</span>
+            </div>
+          </div>
+
+          <div class="total-row">
+            <span>Total</span>
+            <span class="total-value">₹{{ total$ | async | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="action-stack">
+            <a routerLink="/checkout/address" class="checkout-btn-premium">
+              PROCEED TO CHECKOUT
+            </a>
+            <a routerLink="/categories" class="continue-link">
+              Continue Shopping
+            </a>
+          </div>
+
+          <div class="trust-footer">
+            <div class="trust-dot"></div>
+            <div class="trust-dot"></div>
+            <div class="trust-dot"></div>
+          </div>
         </div>
       </div>
     </div>
-
-    <div class="cart-summary">
-      <!-- Summary section with total amount and cart actions -->
-
-      <div class="summary-row">
-        <h3>Total:</h3>
-        <h3 class="total-amount">₹{{ total | number:'1.2-2' }}</h3>
-        <!-- Display total cart value from component's `total` property -->
-      </div>
-
-      <div class="cart-actions">
-        <!-- Buttons for cart operations -->
-
-        <button (click)="clearCart()" class="clear-btn">
-          Clear Cart
-        </button>
-        <!-- Calls component method clearCart() to remove all items -->
-
-        <a routerLink="/products" class="continue-shopping">
-          Continue Shopping
-        </a>
-        <!-- Link to browse more products -->
-
-        <a routerLink="/checkout/address" class="checkout-btn">
-          Proceed to Checkout
-        </a>
-        <!-- Link to navigate to checkout address page -->
-      </div>
-    </div>
   </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Preparing your cart...</p>
+    </div>
+  </ng-template>
 </div>

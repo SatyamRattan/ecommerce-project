@@ -4,25 +4,39 @@
     padding: 20px;
 }
 
+/* Main styling fix */
 .header {
     margin-bottom: 30px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    /* Blue gradient background */
+    padding: 30px;
+    border-radius: 12px;
+    color: white;
+    /* Make all text inside white */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .back-link {
     display: inline-block;
     margin-bottom: 15px;
-    color: #007bff;
+    color: rgba(255, 255, 255, 0.9);
+    /* Light white for link */
     text-decoration: none;
     font-size: 0.95em;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
 }
 
 .back-link:hover {
-    text-decoration: underline;
+    color: white;
+    border-bottom-style: solid;
+    text-decoration: none;
 }
 
 h2 {
     margin: 0;
-    color: #333;
+    color: white;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .loading,
@@ -49,7 +63,7 @@ h2 {
     align-items: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid #f0f0f0;
 }
 
 .order-info h3 {
@@ -228,4 +242,68 @@ h2 {
     padding-top: 15px;
     border-top: 2px solid #333;
     font-size: 1.1em;
+}
+
+/* Tracking History Styles */
+.history-list {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.history-item {
+    display: flex;
+    flex-wrap: wrap;
+    /* Handle mobile */
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+.history-meta {
+    width: 180px;
+    flex-shrink: 0;
+}
+
+.history-date {
+    color: #666;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.history-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.history-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.history-comment {
+    color: #555;
+    font-size: 0.95em;
+}
+
+@media (max-width: 600px) {
+    .history-item {
+        flex-direction: column;
+    }
+
+    .history-meta {
+        width: 100%;
+        margin-bottom: 5px;
+    }
 }

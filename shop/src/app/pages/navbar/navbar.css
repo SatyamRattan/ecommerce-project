@@ -11,8 +11,11 @@
 
 .container {
     display: flex;
+    /* Use space-between to push nav-actions to the right */
     justify-content: space-between;
     align-items: center;
+    /* Add horizontal gap between all flex children */
+    gap: 2rem;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1.5rem;
@@ -30,14 +33,97 @@
     text-decoration: none;
 }
 
+/* Search container: flexbox to arrange input and button side by side */
+/* Search container: uses relative positioning to contain the absolute positioned button */
+.search-container {
+    position: relative;
+    display: flex;
+    /* Keep flex for input sizing if needed, or block */
+    align-items: center;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    /* padding: 0.3rem 0.5rem;  Removed padding to let input fill space */
+    flex: 0 1 400px;
+    min-width: 200px;
+    margin-right: auto;
+}
+
+/* Search input field styling */
+.search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0.7rem 2.8rem 0.7rem 1.2rem;
+    /* Right padding makes room for icon */
+    color: var(--text-main);
+    font-size: 0.9rem;
+    width: 100%;
+    /* Ensure full width */
+    border-radius: 24px;
+    /* match container */
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* Search button with icon - Absolutely positioned */
+.search-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    /* Reduced padding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+    border-radius: 50%;
+    z-index: 10;
+    /* Ensure it's above input */
+}
+
+.search-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.search-btn svg {
+    display: block;
+}
+
+
 .nav-links,
 .nav-actions {
     display: flex;
     list-style: none;
+    /* Increase gap between individual items within each group */
     gap: 2rem;
     margin: 0;
     padding: 0;
     align-items: center;
+}
+
+/* Add extra spacing after nav-links group to separate from nav-actions */
+.nav-links {
+    /* Create visual separation by adding right margin */
+    margin-right: 4rem;
+    /* Add left margin to create space from search bar */
+    margin-left: 1.5rem;
+}
+
+/* Ensure nav-actions stay grouped on the right */
+.nav-actions {
+    /* Prevent nav-actions from expanding */
+    flex-shrink: 0;
 }
 
 .nav-links a,
@@ -113,30 +199,18 @@
 
 /* Style for the circular profile icon */
 .profile-icon {
-    width: 32px;
-    /* Fixed width for the circle */
-    height: 32px;
-    /* Fixed height for the circle */
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    /* Make it a perfect circle */
-    background: var(--primary-gradient);
-    /* Use the primary gradient for background */
+    background: #4f46e5;
     color: white;
-    /* White text color for the ID character */
     display: flex;
-    /* Flexbox for centering text */
     align-items: center;
-    /* Center text vertically */
     justify-content: center;
-    /* Center text horizontally */
-    font-size: 0.9rem;
-    /* Font size for the ID character */
-    font-weight: 700;
-    /* Bold text for visibility */
+    font-weight: 600;
+    font-size: 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    /* Soft shadow for depth */
     text-transform: uppercase;
-    /* Ensure text is uppercase */
 }
 
 /* Style for the 'Profile' text next to the icon */
@@ -189,27 +263,27 @@
 /* .login-icon {
     width: 32px;
     /* Fixed width for the circle */
-    /* height: 32px; */
-    /* Fixed height for the circle */
-    /* border-radius: 50%; */
-    /* Make it a perfect circle */
-    /* background: var(--primary-gradient); */
-    /* Use the primary gradient for background */
-    /* color: white; */
-    /* White text color for the 'L' character */
-    /* display: flex; */
-    /* Flexbox for centering text */
-    /* align-items: center; */
-    /* Center text vertically */
-    /* justify-content: center; */
-    /* Center text horizontally */
-    /* font-size: 0.9rem; */
-    /* Font size for the character */
-    /* font-weight: 700; */
-    /* Bold text for visibility */
-    /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); */
-    /* Soft shadow for depth */
-/* } */ 
+/* height: 32px; */
+/* Fixed height for the circle */
+/* border-radius: 50%; */
+/* Make it a perfect circle */
+/* background: var(--primary-gradient); */
+/* Use the primary gradient for background */
+/* color: white; */
+/* White text color for the 'L' character */
+/* display: flex; */
+/* Flexbox for centering text */
+/* align-items: center; */
+/* Center text vertically */
+/* justify-content: center; */
+/* Center text horizontally */
+/* font-size: 0.9rem; */
+/* Font size for the character */
+/* font-weight: 700; */
+/* Bold text for visibility */
+/* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); */
+/* Soft shadow for depth */
+/* } */
 
 /* Style for the 'Login' text next to the icon */
 .login-text {
@@ -224,13 +298,37 @@
 @media (max-width: 768px) {
     .container {
         flex-direction: column;
+        /* Reduce gap on mobile for better vertical spacing */
         gap: 1.5rem;
     }
 
     .nav-links,
     .nav-actions {
+        /* Reduce gap between items on mobile */
         gap: 1.2rem;
         flex-wrap: wrap;
         justify-content: center;
     }
+
+    /* Remove extra margins on mobile since layout is vertical */
+    .nav-links {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    /* Search bar takes full width on mobile */
+    .search-container {
+        width: 100%;
+        max-width: 400px;
+        margin-right: 0;
+    }
+}
+
+.active-link {
+    font-weight: bold;
+    padding: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: lightgray;
 }

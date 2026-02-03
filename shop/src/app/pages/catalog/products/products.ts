@@ -1,92 +1,89 @@
-import { Component } from '@angular/core'; // Import Component decorator from Angular core
-import { CommonModule } from '@angular/common'; // Import CommonModule for common directives like ngIf/ngFor
-import { Api } from '../../../services/api'; // Import Api service to fetch products from backend
-import { Router, ActivatedRoute } from '@angular/router'; // Import Router for navigation, ActivatedRoute for query params
-import { Cart } from '../../../services/cart'; // Import Cart service to add products to cart
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Cart } from '../../../services/cart';
+import { Wishlist } from '../../../services/wishlist';
+import { ProductService } from '../../../services/products.service';
+import { Observable, switchMap } from 'rxjs';
+import { Product } from '../../../models/product.model';
 
 @Component({
-  selector: 'app-products', // Define selector to use this component in HTML <app-products></app-products>
-  standalone: true, // Standalone component, does not require NgModule
-  imports: [CommonModule], // Import CommonModule inside standalone component
-  templateUrl: './products.html', // HTML template file for this component
-  styleUrl: './products.css' // CSS file for styling this component
+  selector: 'app-products',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './products.html',
+  styleUrl: './products.css'
 })
 export class Products {
 
-  products: any[] = []; // Array to hold products currently displayed (after filtering)
-  allProducts: any[] = []; // Array to hold all products fetched from backend
-  isLoading: boolean = false; // Boolean flag to show loading spinner/message
+  products$!: Observable<Product[]>;
 
   constructor(
-    private api: Api,                // Inject Api service to fetch products
-    public router: Router,           // Inject Router service for navigation
-    private route: ActivatedRoute,   // Inject ActivatedRoute to read query parameters like category
-    private cartService: Cart        // Inject Cart service to handle adding products to cart
+    private productService: ProductService,
+    public router: Router,
+    private route: ActivatedRoute,
+    private cartService: Cart,
+    public wishlist: Wishlist
   ) { }
 
-  ngOnInit() { // Angular lifecycle method called once the component is initialized
-    this.isLoading = true; // Start the loading spinner/message
-    console.log('Fetching products...'); // Debug log to indicate fetch start
+  ngOnInit() {
+    /**
+     * Setup reactive stream to handle search and category query changes
+     * 
+     * Flow:
+     * 1. Listen to query parameter changes using route.queryParamMap
+     * 2. Extract 'search' and 'category' params from URL
+     * 3. Call ProductService.getProducts() with both parameters
+     * 4. Backend returns filtered results based on search query and/or category
+     * 5. Template displays products from backend (no client-side filtering)
+     * 
+     * Examples:
+     * - /products → backend returns all products
+     * - /products?search=iphone → backend returns search results
+     * - /products?category=5 → backend returns products in category 5 (e.g., Mobiles)
+     * - /products?search=phone&category=5 → backend returns search results within category 5
+     */
+    this.products$ = this.route.queryParamMap.pipe(
+      switchMap(params => {
+        // Extract search query from URL (?search=...)
+        const searchQuery = params.get('search');
 
-    // Call the Api service to fetch all products
-    this.api.getProducts().subscribe({
-      next: (res: any) => { // On successful fetch
-        console.log('[Products] Raw response:', res); // Debug log of raw API response
-        this.allProducts = res; // Save all products fetched into allProducts array
+        // Extract category ID from URL (?category=...)
+        // Convert string to number if present
+        const categoryParam = params.get('category');
+        const categoryId = categoryParam ? Number(categoryParam) : undefined;
 
-        // Subscribe to query params to dynamically filter products (e.g., by category)
-        this.route.queryParamMap.subscribe(params => {
-          const catId = params.get('category'); // Read 'category' query param from URL
-          console.log('[Products] Category ID from query:', catId); // Debug log category ID
-
-          if (catId) { // If category ID exists
-            const numericCatId = Number(catId); // Convert string category ID to number
-            // Filter allProducts array to only include products matching category ID
-            this.products = this.allProducts.filter(p => Number(p.category) === numericCatId);
-            console.log(`[Products] Filtered list size: ${this.products.length}`); // Debug log filtered length
-          } else { // If no category filter, show all products
-            this.products = this.allProducts; // Copy all products to display list
-            console.log('[Products] Showing all products'); // Debug log
-          }
-
-          this.isLoading = false; // Stop loading spinner/message
-        });
-      },
-      error: (err: any) => { // If API call fails
-        console.error('Error fetching products:', err); // Log error in console
-        this.isLoading = false; // Stop loading spinner/message
-        if (typeof alert !== 'undefined') { // Browser alert fallback
-          alert('Failed to load products. Check console.'); // Notify user
-        }
-      }
-    });
+        // Call ProductService with both search and category parameters
+        // Backend handles the actual filtering based on these params
+        return this.productService.getProducts(
+          searchQuery || undefined,
+          categoryId
+        );
+      })
+    );
   }
 
-  addToCart(event: Event, product: any) { // Method to add a product to the cart
-    event.stopPropagation(); // Stop the click event from bubbling to parent (like navigating to product page)
-    console.log('[Products] Adding to cart:', product.id); // Debug log product ID
+  addToCart(event: Event, product: any) {
+    event.stopPropagation();
+    console.log('[Products] Adding to cart:', product.id);
 
-    // Call Cart service to add the product
     this.cartService.addToCart(product).subscribe({
-      next: () => { // On successful addition
-        if (typeof alert !== 'undefined') { // Browser alert fallback
-          alert(`${product.name} added to cart!`); // Notify user
+      next: () => {
+        if (typeof alert !== 'undefined') {
+          alert(`${product.name} added to cart!`);
         }
       },
-      error: (err) => { // On error adding to cart
-        console.error('[Products] Add to cart error FULL:', err); // Log error in console
-        let msg = 'Unknown error'; // Default error message
-
-        // Check if error object has detailed message
+      error: (err) => {
+        console.error('[Products] Add to cart error FULL:', err);
+        let msg = 'Unknown error';
         if (err.error) {
-          msg = typeof err.error === 'string' // If error is string
+          msg = typeof err.error === 'string'
             ? err.error
-            : (err.error.message || err.error.detail || 'Error details in console'); // Pick message or detail
-        } else if (err.message) { // Otherwise check for generic message
+            : (err.error.message || err.error.detail || 'Error details in console');
+        } else if (err.message) {
           msg = err.message;
         }
 
-        // Alert user of error
         if (typeof alert !== 'undefined') {
           alert(`Failed to add to cart: ${msg}\n\nCheck console for details.`);
         }
@@ -94,42 +91,35 @@ export class Products {
     });
   }
 
-  openProduct(id: number) { // Method to navigate to product detail page
-    this.router.navigate(['/product', id]); // Use Angular router to navigate to /product/:id
+  toggleWishlist(event: Event, product: any) {
+    event.stopPropagation();
+    this.wishlist.toggleWishlist(product.id).subscribe({
+      next: (res) => console.log(res.message),
+      error: (err) => {
+        if (err.message === 'Unauthenticated') {
+          this.router.navigate(['/login']);
+        }
+      }
+    });
   }
 
+  getVariantsByType(variants: any[]) {
+    if (!variants || !Array.isArray(variants)) return [];
+    const grouped: { [key: string]: string[] } = {};
+    variants.forEach(v => {
+      const type = v.variant_type || 'Options';
+      if (!grouped[type]) grouped[type] = [];
+      if (!grouped[type].includes(v.variant_value)) {
+        grouped[type].push(v.variant_value);
+      }
+    });
+    return Object.keys(grouped).map(key => ({
+      type: key,
+      values: grouped[key]
+    }));
+  }
+
+  openProduct(id: number) {
+    this.router.navigate(['/product', id]);
+  }
 }
-
-
-
-// Key Notes on Functionality
-
-// Fetching Products
-
-// Uses Api.getProducts() to fetch all products from the backend.
-
-// Subscribes to queryParamMap to reactively filter products by category (?category=1).
-
-// Filtering Logic
-
-// Converts category query param to number.
-
-// Filters allProducts based on category ID.
-
-// If no category, displays all products.
-
-// Add to Cart
-
-// Stops propagation to avoid accidental navigation.
-
-// Calls cartService.addToCart(product.id) and shows alerts on success/failure.
-
-// Handles detailed error extraction (err.error, err.message, etc.).
-
-// Product Navigation
-
-// Clicking a product triggers openProduct(id) → navigates to /product/:id.
-
-// Loading State
-
-// isLoading shows a spinner/message while fetching/filtering products.

@@ -1,46 +1,77 @@
-<!-- Page title for the products page -->
-<h2 class="title">Products</h2>
+<div class="products-page">
+  <!-- Hero Header -->
+  <header class="products-hero">
+    <div class="container">
+      <h1>Our Collection</h1>
+      <p *ngIf="products$ | async as products">
+        Discovering {{ products.length }} premium items curated just for you.
+      </p>
+    </div>
+  </header>
 
-<!-- Loading state: show this div while products are being fetched -->
-<div *ngIf="isLoading" class="loading-state">
-  <p>Loading products...</p> <!-- Message displayed to user during loading -->
-</div>
+  <div class="container main-content">
+    <div *ngIf="products$ | async as products; else loading">
 
-<!-- Empty state: shown when loading is done but there are no products to display -->
-<div *ngIf="!isLoading && products.length === 0" class="empty-state">
-  <p>No products found in this category.</p> <!-- Inform user that no products match the filter/category -->
-  <button (click)="router.navigate(['/products'])">View All Products</button>
-  <!-- Button navigates back to the full products page -->
-</div>
+      <!-- Empty State -->
+      <div *ngIf="products.length === 0" class="empty-products">
+        <div class="empty-icon">🔍</div>
+        <h2>No Products Found</h2>
+        <p>We couldn't find any products in this category at the moment. Try exploring our other collections!</p>
+        <button (click)="router.navigate(['/products'])" class="view-all-btn">View All Products</button>
+      </div>
 
-<!-- Products grid: displays all fetched products -->
-<div class="products-grid" *ngIf="!isLoading && products.length > 0">
-  <!-- Loop through the products array and create a card for each product -->
-  <div class="product-card" *ngFor="let product of products" 
-       (click)="openProduct(product.id)">
-    <!-- When user clicks on the card (outside the button), navigate to product detail page -->
+      <!-- Products Grid -->
+      <div class="products-grid" *ngIf="products.length > 0">
+        <div class="product-card" *ngFor="let product of products" (click)="openProduct(product.id)">
+          <!-- Wishlist Toggle -->
+          <button class="wishlist-btn" [class.active]="wishlist.wishlistedIds().has(product.id)"
+            (click)="toggleWishlist($event, product)" title="Add to Wishlist">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+              </path>
+            </svg>
+          </button>
 
-    <!-- Product Name -->
-    <h3>{{ product.name }}</h3> <!-- Display the product's name -->
+          <!-- Product Image -->
+          <div class="product-image">
+            <img *ngIf="product.media.length" [src]="product.media[0].file" [alt]="product.name"
+              onerror="this.src='assets/images/placeholder.jpg'">
+            <img *ngIf="!product.media.length" [src]="product.image_url || 'assets/images/placeholder.jpg'"
+              [alt]="product.name" onerror="this.src='assets/images/placeholder.jpg'">
+          </div>
 
-    <!-- Product Price -->
-    <p class="price">
-      ₹{{ product.discount_price || product.base_price }}
-      <!-- Show discount price if available, otherwise show base price -->
-    </p>
+          <div class="product-info">
+            <div class="category-label">{{ product.category_name || 'Premium' }}</div>
+            <h3 class="product-title">{{ product.name }}</h3>
 
-    <!-- Product Stock Status -->
-    <p class="stock" *ngIf="product.stock > 0">In Stock</p>
-    <!-- Display "In Stock" if the product has quantity > 0 -->
+            <div class="price-stock-row">
+              <span class="price">₹{{ product.discount_price || product.base_price }}</span>
+              <span class="stock-badge" [class.out-of-stock]="product.stock === 0">
+                {{ (product.stock ?? 0) > 0 ? 'In Stock' : 'Out of Stock' }}
+              </span>
+            </div>
 
-    <p class="out" *ngIf="product.stock === 0">Out of Stock</p>
-    <!-- Display "Out of Stock" if the product quantity is zero -->
+            <button class="add-to-cart-btn" (click)="addToCart($event, product)" [disabled]="product.stock === 0">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              <span>Add to Cart</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Add to Cart Button -->
-    <button class="btn-add" (click)="addToCart($event, product)">
-      Add to Cart
-    </button>
-    <!-- Click handler calls addToCart() method from the component.
-         $event is passed to stop propagation so clicking the button doesn't trigger card click (openProduct). -->
+    <ng-template #loading>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading the collection...</p>
+      </div>
+    </ng-template>
   </div>
 </div>

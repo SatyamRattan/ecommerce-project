@@ -30,10 +30,11 @@
 
                 <!-- Display address if 'address' exists -->
                 <div class="address-card" *ngIf="address">
-                    <p><strong>Address:</strong> {{ address.address }}</p>  <!-- Street/Address -->
-                    <p><strong>City:</strong> {{ address.city }}</p>        <!-- City -->
-                    <p><strong>State/Pincode:</strong> {{ address.state }} - {{ address.pincode }}</p> <!-- State & Pincode -->
-                    <p><strong>Country:</strong> {{ address.country }}</p>  <!-- Country -->
+                    <p><strong>Address:</strong> {{ address.address }}</p> <!-- Street/Address -->
+                    <p><strong>City:</strong> {{ address.city }}</p> <!-- City -->
+                    <p><strong>State/Pincode:</strong> {{ address.state }} - {{ address.pincode }}</p>
+                    <!-- State & Pincode -->
+                    <p><strong>Country:</strong> {{ address.country }}</p> <!-- Country -->
                     <!-- Link to edit shipping address -->
                     <a routerLink="/checkout/address" class="edit-btn">Edit Address</a>
                 </div>
@@ -50,19 +51,20 @@
 
                         <!-- Product information -->
                         <div class="item-info">
-                            <!-- Product name; fallback to 'Product' if name is missing -->
-                            <h5>{{ item.product?.name || 'Product' }}</h5>
+                            <!-- Product name -->
+                            <h5>{{ item.product.name }}</h5>
 
                             <!-- Quantity and price -->
                             <p>
-                                Qty: {{ item.quantity }} x 
-                                ₹{{ (item.product?.price || item.price) | number:'1.2-2' }}
+                                Qty: {{ item.quantity }} x
+                                ₹{{ (item.product.discount_price ?? item.product.base_price) | number:'1.2-2' }}
                             </p>
                         </div>
 
                         <!-- Total price for this cart item -->
                         <p class="item-total">
-                            ₹{{ ((item.product?.price || item.price) * item.quantity) | number:'1.2-2' }}
+                            ₹{{ ((item.product.discount_price ?? item.product.base_price) * item.quantity) |
+                            number:'1.2-2' }}
                         </p>
                     </div>
                 </div>
@@ -78,15 +80,19 @@
                 <div class="payment-selection">
 
                     <!-- Cash on Delivery option -->
-                    <div class="payment-method" [class.active]="paymentMethod === 'cod'" (click)="setPaymentMethod('cod')"> <!-- Apply 'active' class if selected -->       <!-- On click, set paymentMethod to 'cod' -->
+                    <div class="payment-method" [class.active]="paymentMethod === 'cod'"
+                        (click)="setPaymentMethod('cod')"> <!-- Apply 'active' class if selected -->
+                        <!-- On click, set paymentMethod to 'cod' -->
                         <span class="dot"></span>
                         <span>Cash on Delivery</span>
                     </div>
 
                     <!-- Card payment option (currently waitlist) -->
-                    <div class="payment-method" [class.active]="paymentMethod === 'card'" (click)="setPaymentMethod('card')"> <!-- Apply 'active' class if selected -->       <!-- On click, set paymentMethod to 'card' -->
+                    <div class="payment-method" [class.active]="paymentMethod === 'card'"
+                        (click)="setPaymentMethod('card')"> <!-- Apply 'active' class if selected -->
+                        <!-- On click, set paymentMethod to 'card' -->
                         <span class="dot"></span>
-                        <span>Credit/Debit Card (Waitlist)</span>
+                        <span>Credit/Debit Card</span>
                     </div>
 
                 </div> <!-- End payment-selection -->
@@ -126,7 +132,8 @@
                 <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
                 <!-- Place order button -->
-                <button class="btn-pay" [disabled]="isProcessing || !agreed"(click)='placeOrder()'> <!-- Disable if processing or user hasn’t agreed On click, call placeOrder() method -->
+                <button class="btn-pay" [disabled]="isProcessing || !agreed" (click)='placeOrder()'>
+                    <!-- Disable if processing or user hasn’t agreed On click, call placeOrder() method -->
                     <!-- Dynamic button text based on processing state -->
                     {{ isProcessing ? 'Processing...' : 'Place Order ₹' + (total | number:'1.2-2') }}
                 </button>

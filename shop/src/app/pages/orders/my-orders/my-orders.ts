@@ -1,107 +1,104 @@
-import { Component, OnInit } from '@angular/core'; 
-// Component decorator & lifecycle hook OnInit
-
-import { CommonModule } from '@angular/common'; 
-// CommonModule provides Angular directives like ngIf, ngFor
-
-import { RouterLink } from '@angular/router'; 
-// RouterLink allows navigation via <a [routerLink]=""> links
-
-import { Orders } from '../../../services/orders'; 
-// Service to interact with backend for fetching/managing orders
-
-import { Auth } from '../../../services/auth'; 
-// Auth service for user info / authentication checks
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common'; // Import isPlatformBrowser
+import { RouterLink } from '@angular/router';
+import { Orders } from '../../../services/orders';
+import { Auth } from '../../../services/auth';
+import { Observable, map, of, BehaviorSubject } from 'rxjs';
 
 @Component({
-  selector: 'app-my-orders', 
-  // Component selector, used in HTML as <app-my-orders>
-
-  standalone: true, 
-  // Standalone component (Angular 14+), no need for NgModule
-
-  imports: [CommonModule, RouterLink], 
-  // Modules/directives used in template
-
-  templateUrl: './my-orders.html', 
-  // HTML template file
-
-  styleUrl: './my-orders.css', 
-  // CSS file for this component
+  selector: 'app-my-orders',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './my-orders.html',
+  styleUrl: './my-orders.css',
 })
 export class MyOrders implements OnInit {
-  orders: any[] = []; 
-  // Holds the list of orders fetched from backend
 
-  loading = true; 
-  // Loading state for spinner / UI feedback
+  private ordersSubject = new BehaviorSubject<any[]>([]);
+  orders$ = this.ordersSubject.asObservable();
 
-  errorMessage = ''; 
-  // Holds error messages to display in template
+  loading = true;
+  errorMessage = '';
 
-  constructor(private ordersService: Orders, private auth: Auth) { } 
-  // Inject Orders & Auth services via Angular DI
+  constructor(
+    private ordersService: Orders,
+    private auth: Auth,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) { }
 
   ngOnInit() {
-    // Lifecycle hook called after component init
-    this.loadOrders(); 
-    // Load orders on component init
+    // HYDRATION FIX: Prevent API calls during SSR.
+    if (isPlatformBrowser(this.platformId)) {
+      this.refreshOrders();
+    }
   }
 
-  loadOrders() {
-    this.loading = true; 
-    // Show loading spinner
-    console.log('Fetching orders...');
-    
+  refreshOrders() {
+    this.loading = true;
+    this.errorMessage = '';
+
     this.ordersService.getOrders().subscribe({
-      next: (data) => {
-        // Successful API call
-        console.log('Orders data received:', data);
+      next: (data: any) => {
+        let list = data.results || data || [];
 
-        // Backend may return paginated { results: [...] } or raw array
-        this.orders = data.results || data || [];
+        // Normalize each order
+        list = list.map((order: any) => {
+          // Normalize items
+          let items = (order.items || []).map((item: any) => ({
+            ...item,
+            // Use the new product_name from backend, or fallback to nested product object
+            product_name: item.product_name || item.product?.name || `Product #${item.product_id || item.product}`
+          }));
 
-        this.loading = false; 
-        // Stop spinner after data received
+          // Fallback for flat order structures (if any)
+          if (items.length === 0 && (order.product_id || order.product_name || order.price)) {
+            items = [{
+              ...order,
+              product_name: order.product_name || order.product?.name || `Product #${order.product_id || order.product}`
+            }];
+          }
+
+          return {
+            ...order,
+            items: items,
+            // Prioritize total_amount as the primary backend field
+            total_price: order.total_amount || order.total_price || order.total || 0,
+            // Ensure status exists
+            status: order.status || 'pending'
+          };
+        });
+
+        this.ordersSubject.next(list);
+        this.loading = false;
       },
       error: (err) => {
-        // Handle API errors
-        console.error('Error loading orders:', err);
-
-        // Extract meaningful error message if available
-        const detail = err.error?.detail || err.error?.message || err.message || 'Unknown error';
-        this.errorMessage = 'Failed to load orders: ' + detail;
-
-        this.loading = false; 
-        // Stop spinner
+        console.error('[MyOrders] Load failed:', err);
+        this.errorMessage = 'Failed to load orders. Please try again later.';
+        this.loading = false;
+        this.ordersSubject.next([]);
       }
     });
   }
 
   getStatusClass(status: string): string {
-    // Map order status to CSS classes for colored badges
     const statusMap: any = {
-      'pending': 'status-pending',      // Yellow
-      'processing': 'status-processing',// Blue
-      'shipped': 'status-shipped',      // Light Blue
-      'delivered': 'status-delivered',  // Green
-      'cancelled': 'status-cancelled'   // Red
+      'pending': 'status-pending', // Yellow
+      'processing': 'status-processing', // Blue
+      'shipped': 'status-shipped',   // Light Blue
+      'delivered': 'status-delivered', // Green
+      'cancelled': 'status-cancelled' // Red
     };
-    // Default CSS if unknown status
     return statusMap[status?.toLowerCase()] || 'status-default';
   }
 
   cancelOrder(orderId: number) {
-    // Ask user for confirmation before cancelling
-    if (typeof confirm !== 'undefined' && confirm('Are you sure you want to cancel this order?')) {
+    if (confirm('Are you sure you want to cancel this order?')) {
       this.ordersService.cancelOrder(orderId).subscribe({
         next: () => {
-          // Refresh orders after successful cancellation
-          this.loadOrders();
+          this.refreshOrders();
         },
         error: (err) => {
           console.error('Error cancelling order:', err);
-
           if (typeof alert !== 'undefined') {
             alert('Failed to cancel order');
           }

@@ -1,59 +1,106 @@
 import { Component, OnInit } from '@angular/core';
-import { Auth, User } from '../../../services/auth'; // Import Auth service to interact with backend for user profile and logout
-import { CommonModule } from '@angular/common'; // Provides common directives like *ngIf, *ngFor
-import { Router } from '@angular/router'; // Router to navigate programmatically
+import { Auth, User } from '../../../services/auth';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { Observable, map, catchError, of, take } from 'rxjs';
 
 @Component({
-  selector: 'app-profile', // Component selector used in HTML
-  standalone: true, // Standalone component, no NgModule needed
-  imports: [CommonModule], // Import CommonModule for template directives
-  templateUrl: './profile.html', // HTML template file
-  styleUrl: './profile.css', // CSS for styling
+  selector: 'app-profile',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './profile.html',
+  styleUrl: './profile.css',
 })
 export class Profile implements OnInit {
-  user: User | null = null; // Stores the logged-in user's profile data. Initially null.
-  loading: boolean = true; // Indicates whether profile data is currently being fetched
-  error: string = ''; // Stores any error messages to display in the template
+  user$!: Observable<User | null>;
+  error: string = '';
+
+  // Edit mode state
+  editMode: boolean = false;
+  editUserData: Partial<User> = {};
+  saving: boolean = false;
+  successMessage: string = '';
 
   constructor(private auth: Auth, private router: Router) { }
-  // Inject Auth service for API calls and Router for navigation
 
   ngOnInit() {
-    this.fetchProfile(); // Fetch the profile when the component initializes
-  }
+    // 1. Bind to the central auth state
+    this.user$ = this.auth.user$;
 
-  fetchProfile() {
-    this.loading = true; // Show loading state while fetching profile
-    console.log('Fetching profile data...');
-
-    // Call Auth service to get user profile
-    this.auth.getProfile().subscribe({
-      next: (data: any) => {
-        console.log('Profile data received:', data);
-
-        // Handle cases where API returns an array instead of single object
-        this.user = Array.isArray(data) ? data[0] : data;
-
-        this.loading = false; // Hide loading once data is fetched
-      },
-      error: (err) => {
-        console.error('Error fetching profile:', err);
-        this.error = 'Failed to load profile'; // Set generic error message for UI
-        this.loading = false; // Hide loading state
-
-        // Handle unauthorized access
+    // 2. Trigger fetch if not already loaded (Single-Source-of-Truth pattern)
+    this.auth.getProfile().pipe(
+      take(1),
+      catchError(err => {
+        console.error('Error fetching profile in component:', err);
+        this.error = 'Failed to load profile details';
         if (err.status === 401) {
-          console.log('Unauthorized access, redirecting to login...');
-          // Redirect to login page and pass the current URL as returnUrl
           this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
         }
-      }
-    });
+        return of(null);
+      })
+    ).subscribe();
   }
 
   logout() {
-    this.auth.logout(); // Call Auth service to remove token/session
-    this.router.navigate(['/login']); // Redirect user to login page
+    this.auth.logout();
+    this.router.navigate(['/login']);
+  }
+
+  startEdit(user: User) {
+    // Normalize gender to uppercase to match backend choices
+    const normalizedGender = user.gender ? user.gender.toUpperCase() : 'OTHER';
+    this.editUserData = { ...user, gender: normalizedGender };
+    this.editMode = true;
+    this.successMessage = '';
+    this.error = '';
+  }
+
+  cancelEdit() {
+    this.editMode = false;
+    this.editUserData = {};
+    this.error = '';
+  }
+
+  saveProfile() {
+    this.user$.pipe(take(1)).subscribe(user => {
+      const userId = this.auth.getUserId(user);
+      if (!userId) {
+        this.error = 'Could not identify user for update.';
+        return;
+      }
+
+      this.saving = true;
+      this.error = '';
+
+      // Prepare payload with normalized values
+      const updatePayload = {
+        name: this.editUserData.name,
+        phone: this.editUserData.phone,
+        gender: this.editUserData.gender || 'OTHER',
+        dob: this.editUserData.dob || null, // Ensure empty string becomes null
+        address: this.editUserData.address
+      };
+
+      this.auth.updateProfile(userId, updatePayload).subscribe({
+        next: () => {
+          this.saving = false;
+          this.editMode = false;
+          this.successMessage = 'Profile updated successfully!';
+          setTimeout(() => (this.successMessage = ''), 3000);
+
+          // No need to manually refresh getProfile() here!
+          // The auth.user$ BehaviorSubject was updated during the PATCH call
+          // and this component (bound via async pipe) will update instantly.
+        },
+        error: (err) => {
+          this.saving = false;
+          const detail = err.error?.detail || err.error?.message || 'Failed to update profile. Please check all fields.';
+          this.error = detail;
+          console.error('Update profile error:', err);
+        }
+      });
+    });
   }
 }
 

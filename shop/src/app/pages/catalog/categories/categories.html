@@ -1,22 +1,105 @@
-<div class="page">
-  <!-- Page container for categories page -->
+<div class="page-container">
+  <!-- Sidebar Section -->
+  <div class="categories-grid">
+    <div *ngFor="let cat of getParentCategories()" class="category-item">
+      <div class="category-card" [class.expanded]="isExpanded(cat.id)" (click)="toggleCategory($event, cat)"
+        tabindex="0">
+        <div class="category-header">
+          <h3>{{ cat.name }}</h3>
+          <span class="expand-icon" *ngIf="hasSubcategories(cat.id)">
+            {{ isExpanded(cat.id) ? '▼' : '▶' }}
+          </span>
+        </div>
+      </div>
 
-  <h1>Shop by Category</h1>
-  <!-- Page heading -->
+      <!-- Subcategories -->
+      <div class="subcategories" *ngIf="isExpanded(cat.id) && hasSubcategories(cat.id)" @slideDown>
+        <div *ngFor="let subcat of getSubcategories(cat.id)" class="subcategory-card" (click)="openCategory(subcat.id)"
+          tabindex="0">
+          <h4>{{ subcat.name }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <div class="grid">
-    <!-- Grid container to display categories in a grid layout -->
+  <!-- Main Content Area with Background Image -->
+  <div class="main-content-section">
+    <h1 class="page-title">Shop by Category</h1>
 
-    <!-- Loop through each category in the categories array -->
-    <div class="card" *ngFor="let cat of categories">
-      <!-- Individual category card -->
+    <!-- New Sections Below Title -->
+    <div class="content-body">
+      <!-- Trust Badges -->
+      <div class="trust-badges">
+        <div *ngFor="let badge of trustBadges" class="badge-item">
+          <span class="badge-icon">{{ badge.icon }}</span>
+          <div class="badge-info">
+            <h4>{{ badge.title }}</h4>
+            <p>{{ badge.desc }}</p>
+          </div>
+        </div>
+      </div>
 
-      <h3>{{ cat.name }}</h3>
-      <!-- Display the name of the category -->
+      <!-- Hero Promotion -->
+      <div class="featured-promotion">
+        <h2>Explore Our Latest Series</h2>
+        <p>Discover handpicked collections curated just for you. Shop the best of fashion, electronics, and more.</p>
+        <button class="explore-btn" routerLink="/products">Browse All Products</button>
+      </div>
 
-      <button (click)="openCategory(cat.id)">View Products</button>
-      <!-- Button to navigate to products page filtered by this category -->
-      <!-- (click) calls openCategory() in the component with the category id -->
+      <!-- Featured Products Grid -->
+      <div class="featured-products-section" *ngIf="featuredProducts.length > 0">
+        <div class="section-header">
+          <h3>Featured Products</h3>
+          <a routerLink="/products" class="view-all">View All →</a>
+        </div>
+
+        <div class="products-mini-grid">
+          <div *ngFor="let product of featuredProducts" class="mini-product-card"
+            [routerLink]="['/product', product.id]">
+            <div class="product-image-small">
+              <img [src]="product.image_url" [alt]="product.name" onerror="this.src='assets/images/placeholder.jpg'">
+            </div>
+            <div class="product-info-small">
+              <h5>{{ product.name }}</h5>
+              <span class="product-price">${{ product.price }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonials Section -->
+      <div class="testimonials-section">
+        <div class="section-header">
+          <h3>What Our Customers Say</h3>
+        </div>
+        <div class="testimonials-grid">
+          <div *ngFor="let item of testimonials" class="testimonial-card">
+            <div class="stars">
+              <span *ngFor="let s of [1,2,3,4,5]; let i=index" [class.active]="i < item.rating">★</span>
+            </div>
+            <p class="testimonial-content">"{{ item.content }}"</p>
+            <div class="testimonial-author">
+              <div class="author-info">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.role }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Newsletter Section -->
+      <div class="newsletter-section">
+        <div class="newsletter-content">
+          <h2>Join the Series Club</h2>
+          <p>Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.</p>
+          <div class="newsletter-form">
+            <input type="email" placeholder="Enter your email" [(ngModel)]="newsletterEmail"
+              (keyup.enter)="subscribeNewsletter()">
+            <button (click)="subscribeNewsletter()">Subscribe</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

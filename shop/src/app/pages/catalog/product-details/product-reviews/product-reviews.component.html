@@ -1,0 +1,120 @@
+<div class="reviews-container">
+    <div class="reviews-header">
+        <h2 class="reviews-title">Product Reviews & Ratings</h2>
+        <div class="summary" *ngIf="totalReviews() > 0">
+            <div class="avg">
+                <span class="val">{{ averageRating() | number:'1.1-1' }}</span>
+                <div class="stars">
+                    <span *ngFor="let s of getStars(averageRating())">{{ s }}</span>
+                </div>
+            </div>
+            <p>{{ totalReviews() }} reviews</p>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="reviews-toolbar">
+        <div class="ctrl">
+            <label>Sort:</label>
+            <select (change)="onSortChange($event)" [value]="selectedSort()">
+                <option *ngFor="let opt of sortOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+        </div>
+        <div class="ctrl">
+            <label>Page Size:</label>
+            <select (change)="onPageSizeChange($event)" [value]="pageSize()">
+                <option [value]="5">5</option>
+                <option [value]="10">10</option>
+                <option [value]="20">20</option>
+            </select>
+        </div>
+        <div class="ctrl check">
+            <input type="checkbox" id="commentsOnly" (change)="onFilterToggle()" [checked]="filterWithComments()">
+            <label for="commentsOnly">Comments only</label>
+        </div>
+    </div>
+
+    <!-- Review Form -->
+    <div class="review-form">
+        <h4>Write a Review</h4>
+        <div class="stars-input">
+            <span *ngFor="let i of [1,2,3,4,5]" (click)="setRating(i)" [class.active]="i <= newReviewRating()">★</span>
+        </div>
+        <textarea [ngModel]="newReviewComment()" (ngModelChange)="newReviewComment.set($event)"
+            placeholder="Write your review here..."></textarea>
+        <button class="submit-btn" [disabled]="submittingReview() || newReviewRating() === 0" (click)="submitReview()">
+            {{ submittingReview() ? 'Posting...' : 'Post Review' }}
+        </button>
+    </div>
+
+    <!-- Loading / Error -->
+    <div class="status-msg" *ngIf="loading()">
+        <div class="spinner"></div>
+        <p>Fetching reviews...</p>
+    </div>
+    <div class="status-msg error" *ngIf="errorMessage()">
+        {{ errorMessage() }}
+    </div>
+    <div class="status-msg empty" *ngIf="!loading() && reviews().length === 0">
+        No reviews yet. Be the first to share your experience!
+    </div>
+
+    <!-- List -->
+    <div class="reviews-list" *ngIf="!loading() && reviews().length > 0">
+        <div class="review-card" *ngFor="let r of reviews()">
+            <div class="review-top">
+                <div class="user-info">
+                    <div class="avatar">{{ r.user_name | slice:0:1 | uppercase }}</div>
+                    <div>
+                        <p class="name">{{ r.user_name }}</p>
+                        <p class="date">{{ r.created_at | date:'mediumDate' }}</p>
+                    </div>
+                </div>
+                <div class="stars-static">
+                    <span *ngFor="let s of getStars(r.rating)">{{ s }}</span>
+                </div>
+            </div>
+
+            <p class="comment" *ngIf="r.comment">{{ r.comment }}</p>
+
+            <!-- Media support if provided by backend -->
+            <div class="media-grid" *ngIf="r.images && r.images.length > 0">
+                <img *ngFor="let img of r.images" [src]="img" alt="Review image">
+            </div>
+
+            <div class="review-actions">
+                <button class="action-btn" [class.active]="r.is_liked_by_user" (click)="likeReview(r)">
+                    👍 {{ r.likes_count }}
+                </button>
+                <button class="action-btn" (click)="toggleReplies(r)">
+                    💬 {{ r.replies_count }} Replies
+                </button>
+            </div>
+
+            <!-- Nested Replies -->
+            <div class="replies-box" *ngIf="r.showReplies">
+                <div class="replies-list" *ngIf="r.replies && r.replies.length > 0">
+                    <div class="reply" *ngFor="let reply of r.replies">
+                        <p class="r-user"><strong>{{ reply.user_name }}</strong> • {{ reply.created_at |
+                            date:'shortDate' }}</p>
+                        <p class="r-text">{{ reply.comment }}</p>
+                    </div>
+                </div>
+                <div class="reply-input-row">
+                    <input type="text" [value]="r.replyInput || ''"
+                        (input)="updateReplyInput(r, $any($event.target).value)" placeholder="Write a reply..."
+                        (keyup.enter)="submitReply(r)">
+                    <button (click)="submitReply(r)" [disabled]="!r.replyInput">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages() > 1">
+        <button [disabled]="currentPage() === 1" (click)="onPageChange(currentPage() - 1)">Prev</button>
+        <button *ngFor="let p of pagesArray()" [class.active]="p === currentPage()" (click)="onPageChange(p)">{{ p
+            }}</button>
+        <button [disabled]="currentPage() === totalPages()" (click)="onPageChange(currentPage() + 1)">Next</button>
+    </div>
+</div>

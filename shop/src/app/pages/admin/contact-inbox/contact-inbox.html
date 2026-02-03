@@ -1,0 +1,117 @@
+<div class="inbox-dashboard">
+    <!-- Left Panel: Filters -->
+    <aside class="filters-panel">
+        <div class="panel-card">
+            <h3>Filters</h3>
+
+            <div class="filter-group">
+                <label>Search</label>
+                <div class="search-box">
+                    <input type="text" [(ngModel)]="filters.search" (ngModelChange)="onFilterChange()"
+                        placeholder="Name, email, message...">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Status</label>
+                <select [(ngModel)]="filters.status" (change)="onFilterChange()">
+                    <option value="">All Statuses</option>
+                    <option value="UNREAD">Unread</option>
+                    <option value="READ">Read</option>
+                    <option value="RESOLVED">Resolved</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Subject</label>
+                <select [(ngModel)]="filters.subject" (change)="onFilterChange()">
+                    <option value="">All Subjects</option>
+                    <option value="SUPPORT">Support</option>
+                    <option value="SALES">Sales</option>
+                    <option value="GENERAL">General Inquiry</option>
+                </select>
+            </div>
+
+            <button class="reset-btn" (click)="resetFilters()">Reset Filters</button>
+        </div>
+    </aside>
+
+    <!-- Right Panel: Message List -->
+    <main class="messages-panel">
+        <div class="panel-card">
+            <div class="panel-header">
+                <h2>Support Inbox</h2>
+                <span class="count">{{ messages.length }} messages</span>
+            </div>
+
+            <div class="loading-overlay" *ngIf="loading">
+                <div class="spinner"></div>
+            </div>
+
+            <div class="messages-list" *ngIf="!loading">
+                <div class="empty-state" *ngIf="messages.length === 0">
+                    <p>No messages found matching your criteria.</p>
+                </div>
+
+                <div class="message-card" *ngFor="let msg of messages" (click)="selectMessage(msg)"
+                    [class.active]="selectedMessage?.id === msg.id">
+                    <div class="msg-top">
+                        <span class="sender">{{ msg.name }}</span>
+                        <span [class]="getStatusClass(msg.status)">{{ msg.status }}</span>
+                    </div>
+                    <div class="msg-meta">
+                        <span class="email">{{ msg.email }}</span>
+                        <span class="dot">•</span>
+                        <span class="subject">{{ msg.subject }}</span>
+                    </div>
+                    <div class="msg-preview text-truncate">{{ msg.message }}</div>
+                    <div class="msg-date">{{ msg.created_on | date:'medium' }}</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Message Details Side Panel (Overlay/Modal style) -->
+    <div class="details-overlay" *ngIf="selectedMessage" (click)="closeDetails()">
+        <div class="details-panel" (click)="$event.stopPropagation()">
+            <div class="details-header">
+                <div class="header-left">
+                    <h3>Message Details</h3>
+                    <span [class]="getStatusClass(selectedMessage.status)">{{ selectedMessage.status }}</span>
+                </div>
+                <button class="close-btn" (click)="closeDetails()">×</button>
+            </div>
+
+            <div class="details-body">
+                <div class="detail-row">
+                    <label>From</label>
+                    <p><strong>{{ selectedMessage.name }}</strong><br><span>{{ selectedMessage.email }}</span></p>
+                </div>
+                <div class="detail-row">
+                    <label>Subject</label>
+                    <p>{{ selectedMessage.subject }}</p>
+                </div>
+                <div class="detail-row">
+                    <label>Date Received</label>
+                    <p>{{ selectedMessage.created_on | date:'fullDate' }} at {{ selectedMessage.created_on |
+                        date:'shortTime' }}</p>
+                </div>
+                <div class="detail-row message-content-box">
+                    <label>Message</label>
+                    <p>{{ selectedMessage.message }}</p>
+                </div>
+            </div>
+
+            <div class="details-footer">
+                <button *ngIf="selectedMessage.status === 'UNREAD'" class="action-btn read"
+                    (click)="updateStatus(selectedMessage.id, 'READ')">
+                    Mark as Read
+                </button>
+                <button *ngIf="selectedMessage.status !== 'RESOLVED'" class="action-btn resolve"
+                    (click)="updateStatus(selectedMessage.id, 'RESOLVED')">
+                    Mark as Resolved
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

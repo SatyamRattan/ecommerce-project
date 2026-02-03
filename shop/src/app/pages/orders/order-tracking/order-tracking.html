@@ -23,8 +23,8 @@
     </div>
 
     <!-- Main content -->
-    <!-- Rendered only when loading is false AND order data exists -->
-    <div *ngIf="!loading && order" class="order-details">
+    <!-- Rendered only when order data exists -->
+    <div *ngIf="order" class="order-details">
 
         <!-- ========================= -->
         <!-- Order Header Section -->
@@ -38,14 +38,14 @@
 
                 <!-- Order creation date formatted using Angular DatePipe -->
                 <p class="order-date">
-                    Placed on {{ order.created_at | date:'medium' }}
+                    Placed on {{ order.created_on | date:'medium' }}
                 </p>
             </div>
 
             <!-- Order status badge -->
             <!-- CSS class changes based on order status -->
-            <span [class]="'order-status ' + getStatusClass(order.status)">
-                {{ order.status }}
+            <span [class]="'order-status ' + getStatusClass(currentStatus)">
+                {{ currentStatus }}
             </span>
         </div>
 
@@ -56,42 +56,60 @@
 
             <!-- Horizontal progress bar -->
             <div class="progress-bar">
-                <!-- Width is dynamically set using percentage -->
-                <div
-                    class="progress-fill"
-                    [style.width.%]="getProgressPercentage(order.status)">
+                <!-- Width is dynamically set using calculated width -->
+                <div class="progress-fill" [style.width.%]="getProgressWidth()">
                 </div>
             </div>
 
             <!-- Step indicators -->
+            <!-- Step indicators -->
+            <!-- Uses index-based logic: active if current step >= step index -->
             <div class="progress-steps">
 
-                <!-- Pending step -->
-                <div class="step"
-                     [class.active]="getProgressPercentage(order.status) >= 25">
+                <!-- Pending step (Index 0) -->
+                <div class="step" [class.active]="isStepActive(0)">
                     <div class="step-circle"></div>
                     <p>Pending</p>
                 </div>
 
-                <!-- Processing step -->
-                <div class="step"
-                     [class.active]="getProgressPercentage(order.status) >= 50">
+                <!-- Processing step (Index 1) -->
+                <div class="step" [class.active]="isStepActive(1)">
                     <div class="step-circle"></div>
                     <p>Processing</p>
                 </div>
 
-                <!-- Shipped step -->
-                <div class="step"
-                     [class.active]="getProgressPercentage(order.status) >= 75">
+                <!-- Shipped step (Index 2) -->
+                <div class="step" [class.active]="isStepActive(2)">
                     <div class="step-circle"></div>
                     <p>Shipped</p>
                 </div>
 
-                <!-- Delivered step -->
-                <div class="step"
-                     [class.active]="getProgressPercentage(order.status) >= 100">
+                <!-- Delivered step (Index 3) -->
+                <div class="step" [class.active]="isStepActive(3)">
                     <div class="step-circle"></div>
                     <p>Delivered</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================= -->
+        <!-- Tracking History List -->
+        <!-- ========================= -->
+        <div class="section history-section" *ngIf="history && history.length > 0">
+            <h4>Tracking Details</h4>
+            <div class="history-list">
+                <div class="history-item" *ngFor="let step of history">
+                    <div class="history-meta">
+                        <span class="history-date">{{ step.changed_at | date:'medium' }}</span>
+                    </div>
+                    <div class="history-info">
+                        <span [class]="'history-badge ' + getBadgeClass(step.status)">
+                            {{ step.status }}
+                        </span>
+                        <span class="history-comment" *ngIf="step.comment">
+                            {{ step.comment }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -103,24 +121,26 @@
             <h4>Order Item</h4>
 
             <div class="items-list">
-                <div class="order-item">
+                <!-- Iterate over normalized items array (handles single or multi-item responses) -->
+                <div class="order-item" *ngFor="let item of items">
 
                     <!-- Product details -->
                     <div class="item-info">
                         <!-- Handles multiple backend response formats safely -->
                         <h5>
-                            {{ order.product_name
-                               || order.product?.name
-                               || 'Product #' + order.product }}
+                            {{ item.product_name
+                            || item.product?.name
+                            || 'Product' }}
                         </h5>
 
                         <!-- Quantity -->
-                        <p>Quantity: {{ order.quantity }}</p>
+                        <p>Quantity: {{ item.quantity }}</p>
                     </div>
 
                     <!-- Item price formatted with number pipe -->
                     <p class="item-price">
-                        ₹{{ order.price | number:'1.2-2' }}
+                        <!-- Check if price is on item or falls back to order price (legacy) -->
+                        ₹{{ (item.price || order.price) | number:'1.2-2' }}
                     </p>
                 </div>
             </div>
@@ -155,7 +175,7 @@
                 <div class="summary-row">
                     <span>Subtotal:</span>
                     <span>
-                        ₹{{ order.price * order.quantity | number:'1.2-2' }}
+                        ₹{{ subtotal | number:'1.2-2' }}
                     </span>
                 </div>
 
@@ -164,12 +184,14 @@
                     <span><strong>Total:</strong></span>
                     <span>
                         <strong>
-                            ₹{{ order.total_price | number:'1.2-2' }}
+                            ₹{{ (order.total_price || order.total) | number:'1.2-2' }}
                         </strong>
                     </span>
                 </div>
             </div>
         </div>
 
+        <!-- Debug Info -->
+        <!-- Debug removed for production -->
     </div>
 </div>

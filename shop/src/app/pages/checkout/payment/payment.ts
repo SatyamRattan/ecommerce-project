@@ -1,122 +1,152 @@
-import { Component, OnInit } from '@angular/core';  // Import Component decorator and OnInit lifecycle hook
-import { CommonModule } from '@angular/common';      // Common Angular directives (ngIf, ngFor, etc.)
-import { Router, RouterLink } from '@angular/router'; // Router for navigation, RouterLink for template linking
-import { CheckoutService, ShippingAddress } from '../../../services/checkout'; // Checkout service + ShippingAddress interface
-import { Cart as CartService } from '../../../services/cart';  // Cart service (renamed to avoid conflicts)
-import { Orders as OrdersService } from '../../../services/orders'; // Orders service
-import { forkJoin } from 'rxjs'; // RxJS operator to run multiple observables in parallel
-import { FormsModule } from '@angular/forms'; // FormsModule for ngModel binding
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { CheckoutService, ShippingAddress } from '../../../services/checkout';
+import { Cart as CartService } from '../../../services/cart';
+import { Orders as OrdersService } from '../../../services/orders';
+import { Auth } from '../../../services/auth';
+import { forkJoin } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+
+interface OrderItem {
+  id?: number;
+  product: {
+    id: number;
+    name: string;
+    base_price: number;
+    discount_price?: number | null;
+  };
+  product_id?: number;
+  variant_id?: number | null;
+  quantity: number;
+}
 
 @Component({
-  selector: 'app-payment',  // HTML tag to use this component: <app-payment></app-payment>
-  standalone: true,          // Standalone component, no NgModule required
-  imports: [CommonModule, RouterLink, FormsModule], // Modules used inside this component template
-  templateUrl: './payment.html',  // Path to HTML template
-  styleUrl: './payment.css',      // Path to component-specific CSS
+  selector: 'app-payment',
+  standalone: true,
+  imports: [CommonModule, RouterLink, FormsModule],
+  templateUrl: './payment.html',
+  styleUrl: './payment.css',
 })
-export class Payment implements OnInit {  // Class implements OnInit for lifecycle hook
-  address: ShippingAddress | null = null;  // Holds shipping address object (null if not set)
-  cartItems: any[] = [];                   // Array to hold items currently in the cart
-  total = 0;                               // Total price for all cart items, calculated dynamically
-  isProcessing = false;                    // Flag to prevent multiple clicks / submissions
-  errorMessage = '';                        // Holds error messages to display in UI
-  paymentMethod = 'cod';                    // Default payment method ('cod' = Cash on Delivery)
-  agreed = false;                           // Whether user agreed to terms (bound in template, e.g., checkbox)
+export class Payment implements OnInit {
+  address: ShippingAddress | null = null;
+  cartItems: OrderItem[] = [];
+  total = 0;
+  itemsTotal = 0;
+  orderTotal = 0;
+  isProcessing = false;
+  errorMessage = '';
+  paymentMethod = 'cod';
+  agreed = false;
 
   constructor(
-    private checkoutService: CheckoutService,  // Inject CheckoutService for shipping address operations
-    private cartService: CartService,          // Inject CartService to read cart items and clear cart
-    private ordersService: OrdersService,      // Inject OrdersService to create orders
-    private router: Router                      // Inject Router to navigate programmatically
+    private checkoutService: CheckoutService,
+    private cartService: CartService,
+    private ordersService: OrdersService,
+    private auth: Auth,
+    private router: Router
   ) { }
 
-  // Function to set the payment method
   setPaymentMethod(method: string) {
-    if (this.isProcessing) return;  // If an order is being processed, do not allow changing payment
-    this.paymentMethod = method;     // Set the selected method (e.g., 'cod', 'card')
+    if (this.isProcessing) return;
+    this.paymentMethod = method;
   }
 
-  // Lifecycle hook called after component initialization
   ngOnInit() {
-    // Retrieve saved shipping address from CheckoutService
     this.address = this.checkoutService.getShippingAddress();
 
-    // If no address exists, redirect user to the address entry page
     if (!this.address) {
-      this.router.navigate(['/checkout/address']); // Redirect
-      return; // Stop further execution to prevent errors
+      this.router.navigate(['/checkout/address']);
+      return;
     }
 
-    // Subscribe to cart observable to keep track of current cart items
-    this.cartService.cartItems$.subscribe(items => {
-      this.cartItems = items;   // Update local cartItems array
-      this.calculateTotal();    // Recalculate total whenever cart items change
-    });
+    this.cartItems = this.cartService.loadCart() as OrderItem[];
+
+    if (!this.cartItems || this.cartItems.length === 0) {
+      this.router.navigate(['/cart']);
+      return;
+    }
+
+    this.calculateTotals();
   }
 
-  // Calculate total cost for all items in cart
-  calculateTotal() {
-    // Reduce array of cart items to a single total value
-    this.total = this.cartItems.reduce((sum, item) => {
-      const price = item.product?.price || item.price || 0; // Get product price; fallback if not available
-      const quantity = item.quantity || 1;                  // Get quantity; fallback to 1 if missing
-      return sum + (price * quantity);                      // Multiply price * quantity and add to running sum
-    }, 0); // Initial sum is 0
+  calculateTotals() {
+    this.itemsTotal = this.cartItems.reduce((sum, item) => {
+      const product = item.product || { base_price: 0 };
+      const price = product.discount_price ?? product.base_price;
+      return sum + (price || 0) * item.quantity;
+    }, 0);
+
+    this.orderTotal = this.itemsTotal;
+    this.total = this.orderTotal;
   }
 
-  // Place an order for all cart items
   placeOrder() {
-    if (this.isProcessing) return;   // Prevent double submission
-    this.isProcessing = true;        // Mark that order is being processed
-    this.errorMessage = '';          // Clear previous error messages
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+    this.errorMessage = '';
 
-    // Map each cart item into a createOrder API call
-    const orderRequests = this.cartItems.map(item => {
-      const payload = {
-        product: item.product?.id || item.product,                 // Use product.id if available; fallback to product object
-        quantity: item.quantity,                                   // Quantity of the product
-        price: item.product?.price || item.price,                 // Unit price
-        total_price: (item.product?.price || item.price) * item.quantity, // Total price per item
-        status: 'pending',                                        // Default order status
-        shipping_address: this.address                             // Shipping address object
+    // Get current user and generate a unique order number for this batch
+    const user = this.auth.getCurrentUser();
+    let userId = this.auth.getUserId(user);
+
+    // Ensure userId is a number (integer) as required by backend PK fields
+    if (userId && isNaN(Number(userId))) {
+      console.warn('[Payment] userId is not numeric, sending as-is but backend may reject.');
+    } else if (userId) {
+      userId = Number(userId);
+    }
+
+    // Single unique order number for the entire checkout
+    const timestampShort = Date.now().toString().slice(-8);
+    const orderNumber = `ORD-${timestampShort}-${userId || 'GS'}`.substring(0, 20);
+
+    // Map cart items to backend OrderItem format (nested under Order)
+    const items = this.cartItems.map(item => {
+      const productObj = item.product || { base_price: 0 };
+      const price = productObj.discount_price ?? productObj.base_price;
+
+      return {
+        product: productObj.id || item.product_id,
+        quantity: item.quantity,
+        price: price || 0,
+        variant: item.variant_id || (item as any).variant?.id || null
       };
-      return this.ordersService.createOrder(payload);            // Return observable for API call
     });
 
-    // forkJoin executes all API calls in parallel and waits for all to complete
-    forkJoin(orderRequests).subscribe({
-      next: (responses) => {
-        console.log('All orders created successfully:', responses); // Log responses from backend
+    // Consolidated payload for single-order creation with nested items
+    const payload = {
+      user: userId,
+      order_number: orderNumber,
+      total_amount: this.total,
+      items: items
+    };
 
-        // Once orders are successfully created, clear the cart
+    console.log('[Payment] Placing Order with consolidated Payload:', payload);
+
+    this.ordersService.createOrder(payload).subscribe({
+      next: (response) => {
+        console.log('[Payment] Order created successfully:', response);
+
         this.cartService.clearCart().subscribe(() => {
-          this.checkoutService.clearCheckoutData();           // Clear saved shipping info
-          this.router.navigate(['/checkout/confirmation']);   // Navigate to confirmation page
+          this.checkoutService.clearCheckoutData();
+          this.router.navigate(['/checkout/confirmation']);
         });
       },
-      error: (err) => {                                       // Handle errors from any API call
-        console.error('Error placing order:', err);          // Log for debugging
-        this.errorMessage = 'Failed to place order. Please try again.'; // Show user-friendly error
-        this.isProcessing = false;                            // Reset processing flag so user can retry
+      error: (err) => {
+        console.error('[Payment] Error placing order:', err);
+
+        // Extract specific error detail if available
+        let detailedError = '';
+        if (err.error) {
+          detailedError = typeof err.error === 'string'
+            ? err.error
+            : (err.error.detail || err.error.message || JSON.stringify(err.error));
+        }
+
+        this.errorMessage = `Failed to place order: ${detailedError || 'Please try again.'}`;
+        this.isProcessing = false;
       }
     });
   }
 }
-
-
-
-
-
-// Key Points:
-
-// Uses CheckoutService to get the saved shipping address.
-
-// Subscribes to cartItems$ from CartService to always have the latest cart state.
-
-// calculateTotal() dynamically computes total price whenever cart updates.
-
-// Creates parallel API calls for each cart item using forkJoin.
-
-// Handles success and failure scenarios gracefully with messages and navigation.
-
-// Prevents double submission using isProcessing flag.

@@ -101,6 +101,7 @@ h4 {
 }
 
 .payment-method {
+    color: black;
     display: flex;
     align-items: center;
     gap: 12px;

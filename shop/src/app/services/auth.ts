@@ -18,10 +18,10 @@ export interface User {
   id?: number;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
   gender: string;
-  dob?: string;
-  address?: string;
+  dob?: string | null;
+  address?: string | null;
 }
 
 @Injectable({
@@ -66,12 +66,53 @@ export class Auth {
    */
   public authState$ = this.authState.asObservable();
 
+  /**
+   * BehaviorSubject tracks the current user object
+   */
+  private userSubject = new BehaviorSubject<User | null>(null);
+  public user$ = this.userSubject.asObservable();
+
+  /**
+   * Tracks whether initial authentication check is complete
+   * Prevents UI flicker by ensuring we don't render auth-dependent UI until we know for sure
+   */
+  private authLoadedSubject = new BehaviorSubject<boolean>(false);
+  public authLoaded$ = this.authLoadedSubject.asObservable();
+
   constructor(private http: HttpClient, private router: Router) {
 
     // Restore last logged-in email from localStorage (browser-safe)
     if (typeof localStorage !== 'undefined') {
       this.lastLoggedInEmail = localStorage.getItem('last_user_email');
     }
+
+    // Initialize auth state
+    this.initAuth();
+  }
+
+  /**
+   * Initializes authentication state
+   * Checks for token and fetches profile if needed
+   */
+  private initAuth() {
+    if (!this.isAuthenticated()) {
+      // No token -> Not logged in -> Auth is loaded
+      this.authLoadedSubject.next(true);
+      return;
+    }
+
+    // Token exists -> Fetch profile to confirm validity and get user data
+    this.getProfile().subscribe({
+      next: () => {
+        // success
+        this.authLoadedSubject.next(true);
+      },
+      error: () => {
+        // If profile fetch fails (e.g. token expired), we might want to logout or just mark loaded
+        // For now, mark loaded so UI renders (likely in unauthenticated state if getProfile handles validation)
+        this.authLoadedSubject.next(true);
+      }
+    });
   }
 
   /**
@@ -115,6 +156,22 @@ export class Auth {
    */
   register(userData: User): Observable<any> {
     return this.http.post(`${this.BASE_URL}/user/`, userData);
+  }
+
+  /**
+   * Updates user profile data
+   * @param userId - ID of the user to update
+   * @param userData - Partial user data to update
+   */
+  updateProfile(userId: number, userData: Partial<User>): Observable<User> {
+    return this.http.patch<User>(`${this.BASE_URL}/user/${userId}/`, userData).pipe(
+      tap((updatedUser: User) => {
+        // Update cached user and subject
+        this.currentUser = { ...this.currentUser, ...updatedUser };
+        this.userSubject.next(this.currentUser);
+        console.log('[Auth] Profile updated and synced to BehaviorSubject:', updatedUser);
+      })
+    );
   }
 
   /**
@@ -186,6 +243,7 @@ export class Auth {
 
         // Cache user in memory
         this.currentUser = me;
+        this.userSubject.next(me);
 
         // Attempt to extract user ID
         const possibleId = this.getUserId(me);
@@ -240,6 +298,13 @@ export class Auth {
    */
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  /**
+   * Helper method for semantic check if user is logged in
+   */
+  isLoggedIn(): boolean {
+    return this.isAuthenticated();
   }
 
   /**
@@ -351,6 +416,7 @@ export class Auth {
 
     this.lastLoggedInEmail = null;
     this.currentUser = null;
+    this.userSubject.next(null);
 
     // Notify app that user is logged out
     this.authState.next(false);

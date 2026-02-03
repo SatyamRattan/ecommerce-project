@@ -1,189 +1,244 @@
-// Core Angular lifecycle interfaces and decorators
-import { Component, OnInit, OnDestroy } from '@angular/core';
-
-// CommonModule provides common directives like *ngIf, *ngFor
-import { CommonModule } from '@angular/common';
-
-// ActivatedRoute is used to read route parameters (order ID)
-// RouterLink is used for navigation links in the template
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-
-// Orders service handles API calls related to orders
 import { Orders } from '../../../services/orders';
-
-// Auth service manages authentication state (used implicitly here)
 import { Auth } from '../../../services/auth';
-
-// RxJS utilities for polling and subscription management
-import { interval, Subscription, startWith, switchMap } from 'rxjs';
+import { interval, Subscription, startWith, switchMap, forkJoin, catchError, of, tap, Subject, takeUntil, map } from 'rxjs';
 
 @Component({
   selector: 'app-order-tracking',
-
-  // Standalone component (Angular 15+), no NgModule required
   standalone: true,
-
-  // Modules and directives used in this component’s template
   imports: [CommonModule, RouterLink],
-
-  // External HTML and CSS files
   templateUrl: './order-tracking.html',
   styleUrl: './order-tracking.css',
 })
 export class OrderTracking implements OnInit, OnDestroy {
 
-  /**
-   * Holds the order details returned from the backend
-   */
   order: any = null;
-
-  /**
-   * Controls loading spinner / UI state
-   */
   loading = true;
-
-  /**
-   * Stores user-friendly error messages
-   */
   errorMessage = '';
-
-  /**
-   * Order ID extracted from route parameters
-   */
   orderId: number = 0;
 
-  /**
-   * Subscription reference for polling
-   * Needed to properly unsubscribe on destroy
-   */
-  private pollingSubscription?: Subscription;
+  history: any[] = [];
+  stepTimestamps: { [key: string]: string } = {};
 
-  /**
-   * Inject required services
-   */
+  private destroy$ = new Subject<void>();
+
+  readonly steps = ['pending', 'processing', 'shipped', 'delivered'];
+
   constructor(
     private ordersService: Orders,
     private auth: Auth,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private ngZone: NgZone,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
-  /**
-   * Lifecycle hook runs when component initializes
-   * Reads order ID from URL and starts polling
-   */
   ngOnInit() {
     this.route.params.subscribe(params => {
-      this.orderId = +params['id']; // Convert string to number
-      this.startPolling();
-    });
-  }
+      this.orderId = +params['id'];
 
-  /**
-   * Lifecycle hook runs when component is destroyed
-   * Ensures polling stops to avoid memory leaks
-   */
-  ngOnDestroy() {
-    this.stopPolling();
-  }
-
-  /**
-   * Starts polling the backend every 15 seconds
-   * Immediately fires once using startWith(0)
-   */
-  startPolling() {
-    this.pollingSubscription = interval(15000)
-      .pipe(
-        startWith(0), // Trigger immediately on start
-        switchMap(() => this.ordersService.getOrderById(this.orderId))
-      )
-      .subscribe({
-        next: (data) => {
-          console.log('[Order Tracking] Polled data:', data);
-          this.order = data;
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('Error polling order:', err);
-
-          // Show error only if no previous data exists
-          if (!this.order) {
-            const detail =
-              err.error?.detail ||
-              err.error?.message ||
-              err.message ||
-              'Unknown error';
-
-            this.errorMessage = 'Failed to load order details: ' + detail;
-            this.loading = false;
-          }
-        }
-      });
-  }
-
-  /**
-   * Stops polling by unsubscribing
-   * Prevents background API calls
-   */
-  stopPolling() {
-    this.pollingSubscription?.unsubscribe();
-  }
-
-  /**
-   * Manually loads the order once (without polling)
-   * Useful for refresh buttons or fallback
-   */
-  loadOrder() {
-    this.loading = true;
-
-    this.ordersService.getOrderById(this.orderId).subscribe({
-      next: (data) => {
-        this.order = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading order:', err);
-
-        const detail =
-          err.error?.detail ||
-          err.error?.message ||
-          err.message ||
-          'Unknown error';
-
-        this.errorMessage = 'Failed to load order details: ' + detail;
-        this.loading = false;
+      if (isPlatformBrowser(this.platformId)) {
+        this.loadOrderData();  // initial fetch
+        setTimeout(() => {
+          this.startPolling(); // delayed polling
+        }, 5000);   // wait for hydration to finish
       }
     });
   }
 
   /**
-   * Maps order status to CSS class names
-   * Used for visual status indicators
+   * Performs the initial data load for the order and its status history.
+   * This happens immediately after hydration to prevent an infinite loading state.
    */
-  getStatusClass(status: string): string {
-    const statusMap: any = {
+  loadOrderData() {
+    this.loading = true;
+
+    this.ordersService.getOrderById(this.orderId).pipe(
+      switchMap(orderData =>
+        this.ordersService.getOrderHistory(this.orderId).pipe(
+          catchError(() => of({ status_history: [] })),
+          map((historyData: any) => ({ orderData, historyData }))
+        )
+      ),
+      catchError(err => {
+        console.error("Initial load failed", err);
+        this.errorMessage = "Failed to load order.";
+        this.loading = false;
+        return of(null);
+      })
+    ).subscribe((response: any) => {
+      if (!response) return;
+
+      this.order = response.orderData;
+      this.history = response.historyData?.status_history || [];
+
+      this.processTimestamps(this.history);
+      this.loading = false;
+
+      console.log("Initial order loaded:", this.order);
+    });
+  }
+
+  ngOnDestroy() {
+    // Clean up subscriptions to prevent memory leaks
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  startPolling() {
+    console.log(`[OrderTracking] Starting polling for Order #${this.orderId}`);
+
+    // HYDRATION FIX: Run polling outside Angular's zone.
+    // Interval timers inside Angular zone prevent the app from reaching a "stable" state,
+    // which causes hydration to fail (NG0506).
+    this.ngZone.runOutsideAngular(() => {
+      interval(15000)
+        .pipe(
+          startWith(0),
+          takeUntil(this.destroy$), // Stop polling when component is destroyed
+          switchMap((i) =>
+            this.ordersService.getOrderById(this.orderId).pipe(
+              switchMap(orderData =>
+                this.ordersService.getOrderHistory(this.orderId).pipe(
+                  catchError(() => of({ status_history: [] })),
+                  map((historyData: any) => ({ orderData, historyData }))
+                )
+              ),
+              catchError(err => {
+                console.error("Order fetch failed", err);
+                return of(null);
+              })
+            )
+          )
+        )
+        .subscribe({
+          next: (response: any) => {
+            // Re-enter Angular zone to update UI
+            this.ngZone.run(() => {
+              if (!response) return;
+
+              console.log("Order API:", response.orderData);
+              console.log("History API:", response.historyData);
+
+              this.order = response.orderData;
+              this.history = response.historyData?.status_history || [];
+
+              if (this.order && !this.order.status) {
+                this.order.status = 'pending';
+              }
+
+              this.processTimestamps(this.history);
+              this.loading = false;
+            });
+          },
+          error: (err) => {
+            this.ngZone.run(() => {
+              console.error('Error polling order:', err);
+              if (!this.order) {
+                this.errorMessage = 'Failed to load order. ' + (err.error?.detail || err.message);
+                this.loading = false;
+              }
+            });
+          }
+        });
+    });
+  }
+
+  // Removed direct stopPolling() method as takeUntil handles it via ngOnDestroy
+
+  processTimestamps(history: any[]) {
+    this.stepTimestamps = {};
+    if (!history) return;
+
+    history.forEach((h: any) => {
+      const statusKey = h.status?.toLowerCase();
+      if (statusKey) {
+        this.stepTimestamps[statusKey] = h.changed_at;
+      }
+    });
+  }
+
+  // --- Helper Methods ---
+
+  get items(): any[] {
+    if (!this.order) return [];
+
+    // Normalize items: prioritize order.items array, then order as single item
+    if (this.order.items && Array.isArray(this.order.items)) {
+      return this.order.items;
+    }
+
+    // Check if the order object itself has item properties
+    if (this.order.product_id || this.order.product_name || this.order.price) {
+      return [this.order];
+    }
+
+    return [];
+  }
+
+  // Derived from history, or 'pending' fallback
+  get currentStatus(): string {
+    if (this.history && this.history.length > 0) {
+      // Sort history to find the latest status
+      // Cloning array to avoid mutating original source
+      const sorted = [...this.history].sort((a, b) =>
+        new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()
+      );
+      return sorted[0].status || 'pending';
+    }
+    return 'pending';
+  }
+
+  get currentStepIndex(): number {
+    const status = this.currentStatus.toLowerCase();
+    if (status === 'cancelled') return -1;
+    return this.steps.indexOf(status);
+  }
+
+  isStepActive(stepIndex: number): boolean {
+    if (this.currentStepIndex === -1) return false;
+    return this.currentStepIndex >= stepIndex;
+  }
+
+  getBadgeClass(status: string): string {
+    const map: any = {
       'pending': 'status-pending',
       'processing': 'status-processing',
       'shipped': 'status-shipped',
       'delivered': 'status-delivered',
       'cancelled': 'status-cancelled'
     };
-
-    return statusMap[status?.toLowerCase()] || 'status-default';
+    return map[status?.toLowerCase()] || 'status-default';
   }
 
-  /**
-   * Converts order status into progress percentage
-   * Used for progress bars or trackers
-   */
-  getProgressPercentage(status: string): number {
-    const progressMap: any = {
-      'pending': 25,
-      'processing': 50,
-      'shipped': 75,
-      'delivered': 100,
-      'cancelled': 0
-    };
+  getStatusClass(status: string): string {
+    return this.getBadgeClass(status);
+  }
 
-    return progressMap[status?.toLowerCase()] || 0;
+  getProgressWidth(): number {
+    const index = this.currentStepIndex;
+    if (index === -1) return 0;
+    const widths = [0, 33, 66, 100];
+    return widths[index] || 0;
+  }
+
+  get subtotal(): number {
+    if (!this.order) return 0;
+
+    // Use backend-provided subtotal if available
+    if (this.order.subtotal) return Number(this.order.subtotal);
+
+    const items = this.items;
+    if (items.length > 0) {
+      return items.reduce((total, item) => {
+        // Securely use item.price, fallback to order.price (legacy)
+        const price = Number(item.price || this.order.price || 0);
+        const qty = Number(item.quantity || 1);
+        return total + (price * qty);
+      }, 0);
+    }
+
+    return 0;
   }
 }

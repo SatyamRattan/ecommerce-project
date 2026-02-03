@@ -1,0 +1,149 @@
+<div class="about-page">
+    <!-- 1. HERO SECTION -->
+    <section class="hero-section">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h1 class="fade-in">Redefining Online <br><span class="gradient-text">Shopping Experience</span></h1>
+                <p class="fade-in delay-1">We bring quality products, trusted brands, and seamless shopping — all in one
+                    place.</p>
+                <div class="fade-in delay-2">
+                    <a routerLink="/" class="primary-btn-premium pulse">
+                        <span>Shop Now</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image fade-in delay-3">
+                <div class="image-glass-frame">
+                    <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="400" height="300" rx="20" fill="url(#paint0_linear)" />
+                        <path d="M100 150L150 200L300 100" stroke="white" stroke-width="12" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <defs>
+                            <linearGradient id="paint0_linear" x1="0" y1="0" x2="400" y2="300"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#6366f1" />
+                                <stop offset="1" stop-color="#a855f7" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. OUR STORY -->
+    <section class="story-section glass-section">
+        <div class="container text-center">
+            <h2 class="section-title">Our Journey</h2>
+            <div class="story-card fade-in">
+                <p>What started as a simple idea to make online shopping easier has grown into a platform serving
+                    thousands of happy customers. We focus on quality, trust, and a smooth shopping experience.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. WHY CHOOSE US -->
+    <section class="features-section container">
+        <div class="grid-4">
+            <div class="feature-card glass-card fade-in delay-1">
+                <div class="feature-icon">🚚</div>
+                <h3>Fast Delivery</h3>
+                <p>Quick and reliable shipping</p>
+            </div>
+            <div class="feature-card glass-card fade-in delay-2">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure Payments</h3>
+                <p>Safe & trusted checkout</p>
+            </div>
+            <div class="feature-card glass-card fade-in delay-3">
+                <div class="feature-icon">💬</div>
+                <h3>24/7 Support</h3>
+                <p>Always here to help</p>
+            </div>
+            <div class="feature-card glass-card fade-in delay-4">
+                <div class="feature-icon">⭐</div>
+                <h3>Quality Products</h3>
+                <p>Verified and trusted items</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. WHAT WE OFFER -->
+    <section class="offer-section glass-section">
+        <div class="container split-layout">
+            <div class="offer-image fade-in">
+                <div class="image-mockup">
+                    <svg viewBox="0 0 400 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="400" height="250" rx="16" fill="rgba(255,255,255,0.05)" />
+                        <rect x="20" y="20" width="120" height="100" rx="8" fill="rgba(99,102,241,0.2)" />
+                        <rect x="150" y="20" width="230" height="20" rx="4" fill="rgba(255,255,255,0.1)" />
+                        <rect x="150" y="50" width="180" height="15" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <rect x="20" y="140" width="360" height="80" rx="8" fill="rgba(255,255,255,0.03)" />
+                    </svg>
+                </div>
+            </div>
+            <div class="offer-content fade-in delay-1">
+                <h2 class="section-title left">What We Offer</h2>
+                <ul class="premium-list">
+                    <li>
+                        <span class="list-dot"></span>
+                        Wide range of categories
+                    </li>
+                    <li>
+                        <span class="list-dot"></span>
+                        Best deals & offers
+                    </li>
+                    <li>
+                        <span class="list-dot"></span>
+                        Easy returns
+                    </li>
+                    <li>
+                        <span class="list-dot"></span>
+                        Smooth checkout
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. MISSION & VISION -->
+    <section class="mission-vision-section container">
+        <div class="grid-2">
+            <div class="mission-card glass-card-premium fade-in">
+                <div class="card-glow"></div>
+                <h3>Mission</h3>
+                <p>To make online shopping accessible, affordable, and enjoyable.</p>
+            </div>
+            <div class="vision-card glass-card-premium fade-in delay-1">
+                <div class="card-glow"></div>
+                <h3>Vision</h3>
+                <p>To become a leading digital marketplace known for trust and quality.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. TRUST STATS -->
+    <section class="stats-section glass-section">
+        <div class="container grid-4">
+            <div *ngFor="let stat of stats" class="stat-item fade-in">
+                <div class="stat-value">{{ stat.value | number }}{{ stat.suffix }}</div>
+                <div class="stat-label">{{ stat.label }}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. FINAL CTA BANNER -->
+    <section class="cta-banner container">
+        <div class="cta-card glass-card-high-impact fade-in">
+            <h2>Ready to start shopping?</h2>
+            <a routerLink="/" class="secondary-btn-premium">
+                Explore Products
+            </a>
+        </div>
+    </section>
+</div>

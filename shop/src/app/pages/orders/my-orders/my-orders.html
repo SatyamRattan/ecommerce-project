@@ -1,80 +1,84 @@
-<div class="orders-container">
-    <!-- Container for the entire My Orders page -->
+<div class="orders-page">
+    <!-- Hero Header -->
+    <header class="orders-hero">
+        <div class="container">
+            <h1>Your Orders</h1>
+            <p>Track your purchases, manage returns, and view your order history in one place.</p>
+        </div>
+    </header>
 
-    <h2>My Orders</h2>
-    <!-- Page heading -->
+    <div class="container main-content">
+        <div *ngIf="errorMessage" class="error-banner">
+            <div class="error-icon">⚠️</div>
+            <p>{{ errorMessage }}</p>
+        </div>
 
-    <div *ngIf="loading" class="loading">
-        Loading orders...
-    </div>
-    <!-- Show this loading message while orders are being fetched -->
+        <div *ngIf="orders$ | async as orders; else showSpinner">
 
-    <div *ngIf="errorMessage" class="error">
-        {{ errorMessage }}
-    </div>
-    <!-- Display any error messages returned during API call -->
-
-    <div *ngIf="!loading && orders.length === 0" class="empty-orders">
-        <!-- Show this block if loading is complete but no orders exist -->
-        <p>You haven't placed any orders yet</p>
-        <a routerLink="/products" class="shop-now">
-            Start Shopping
-        </a>
-        <!-- Link to products page so user can start shopping -->
-    </div>
-
-    <div *ngIf="!loading && orders.length > 0" class="orders-list">
-        <!-- Show this block if orders exist -->
-        <div *ngFor="let order of orders" class="order-card">
-            <!-- Loop through each order in the orders array -->
-
-            <div class="order-header">
-                <!-- Header section of each order card -->
-                <div class="order-info">
-                    <h3>Order #{{ order.id }}</h3>
-                    <!-- Display the unique order ID -->
-                    <p class="order-date">{{ order.created_at | date:'medium' }}</p>
-                    <!-- Display formatted order creation date -->
-                </div>
-
-                <span [class]="'order-status ' + getStatusClass(order.status)">
-                    {{ order.status }}
-                </span>
-                <!-- Display order status with dynamic CSS class for styling -->
+            <!-- Empty State -->
+            <div *ngIf="orders.length === 0" class="empty-orders">
+                <div class="empty-icon">📁</div>
+                <h2>No Orders Found</h2>
+                <p>Seems like you haven't placed any orders yet. Start shopping to find items you'll love!</p>
+                <a routerLink="/products" class="shop-now-btn">Start Shopping</a>
             </div>
 
-            <div class="order-details">
-                <!-- Container for order item details -->
+            <!-- Orders List -->
+            <div *ngIf="orders.length > 0" class="orders-list">
+                <div *ngFor="let order of orders" class="order-card">
+                    <div class="order-card-header">
+                        <div class="primary-info">
+                            <span class="order-number">Order #{{ order.id }}</span>
+                            <span class="order-date">{{ (order.created_on || order.created_at) | date:'mediumDate'
+                                }}</span>
+                        </div>
+                        <div class="status-wrapper">
+                            <span [class]="'order-status ' + getStatusClass(order.status)">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                    </div>
 
-                <div class="order-items">
-                    <p>
-                        <strong>Product:</strong>
-                        {{ order.product_name || order.product?.name || 'Product #' + order.product }}
-                    </p>
-                    <!-- Display product name: tries multiple sources (product_name, product object name, or fallback) -->
+                    <div class="order-card-body">
+                        <div class="items-preview">
+                            <div *ngFor="let item of order.items" class="item-summary-line">
+                                <span class="item-name">
+                                    {{ item.product_name || item.product?.name || 'Product #' + (item.product_id ||
+                                    item.product) }}
+                                </span>
+                                <div class="item-details-row">
+                                    <span class="item-qty">Qty: {{ item.quantity }}</span>
+                                    <span class="item-price">₹{{ (item.price || order.price) | number:'1.2-2' }}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                    <p><strong>Quantity:</strong> {{ order.quantity }}</p>
-                    <!-- Display quantity ordered -->
+                        <div class="order-card-footer">
+                            <div class="total-section">
+                                <span class="total-label">Grand Total</span>
+                                <span class="total-amount">₹{{ order.total_price | number:'1.2-2' }}</span>
+                            </div>
 
-                    <p><strong>Total:</strong> ₹{{ order.total_price | number:'1.2-2' }}</p>
-                    <!-- Display total price with currency formatting (2 decimal places) -->
-                </div>
-
-                <div class="order-actions">
-                    <!-- Container for action buttons -->
-
-                    <a [routerLink]="['/orders/track', order.id]" class="view-btn">
-                        View Details
-                    </a>
-                    <!-- Button/link to navigate to order tracking page -->
-
-                    <button *ngIf="order.status === 'pending' || order.status === 'processing'"
-                        (click)="cancelOrder(order.id)" class="cancel-btn">
-                        Cancel Order
-                    </button>
-                    <!-- Show Cancel button only if order is pending or processing; clicking triggers cancelOrder() method -->
+                            <div class="order-actions">
+                                <a [routerLink]="['/orders/track', order.id]" class="details-btn">
+                                    Track Order
+                                </a>
+                                <button *ngIf="order.status === 'pending' || order.status === 'processing'"
+                                    (click)="cancelOrder(order.id)" class="cancel-order-btn">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <ng-template #showSpinner>
+            <div class="loading-state" *ngIf="loading && !errorMessage">
+                <div class="spinner"></div>
+                <p>Retrieving your order history...</p>
+            </div>
+        </ng-template>
     </div>
 </div>
