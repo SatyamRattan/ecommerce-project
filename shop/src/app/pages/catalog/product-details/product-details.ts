@@ -36,8 +36,10 @@ export class ProductDetails {
 
             if (this.product) {
                 this.selectedImage = this.product.media?.[0]?.file || this.product.image_url || '';
-                if (this.product.variants) {
+                if (this.product.variants && this.product.variants.length > 0) {
                     this.groupVariants(this.product.variants);
+                    const firstVariant = this.product.variants[0];
+                    this.selectVariant(firstVariant);
                 }
             }
         });
@@ -56,6 +58,12 @@ export class ProductDetails {
 
     selectVariant(variant: ProductVariant) {
         this.selectedVariant = variant;
+
+        if (variant.images && variant.images.length > 0) {
+            this.selectedImage = variant.images[0].image;
+        } else {
+            this.selectedImage = this.product?.media?.[0]?.file || this.product?.image_url || '';
+        }
     }
 
     /**
@@ -113,7 +121,12 @@ export class ProductDetails {
 
     toggleWishlist() {
         if (!this.product) return;
-        this.wishlist.toggleWishlist(Number(this.product.id)).subscribe({
+
+        // Use variant ID if available, otherwise product ID
+        const productId = this.product.id;
+        const variantId = this.selectedVariant?.id || null;
+
+        this.wishlist.toggleWishlist(Number(productId), variantId ? Number(variantId) : null).subscribe({
             next: (res) => console.log(res.message),
             error: (err) => { }
         });

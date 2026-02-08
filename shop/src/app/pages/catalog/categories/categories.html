@@ -24,6 +24,9 @@
 
   <!-- Main Content Area with Background Image -->
   <div class="main-content-section">
+    <div class="hero-carousel-container">
+      <app-carousel [images]="heroBanners" [autoSlide]="true" [interval]="5000"></app-carousel>
+    </div>
     <h1 class="page-title">Shop by Category</h1>
 
     <!-- New Sections Below Title -->
@@ -61,7 +64,7 @@
             </div>
             <div class="product-info-small">
               <h5>{{ product.name }}</h5>
-              <span class="product-price">${{ product.price }}</span>
+              <span class="product-price">₹{{ product.price }}</span>
             </div>
           </div>
         </div>

@@ -36,6 +36,24 @@
   flex-direction: column;
 }
 
+.hero-carousel-container {
+  margin-bottom: 2rem;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Adjust carousel height for hero section */
+.hero-carousel-container ::ng-deep .carousel-container {
+  aspect-ratio: 21 / 9;
+}
+
+@media (max-width: 768px) {
+  .hero-carousel-container ::ng-deep .carousel-container {
+    aspect-ratio: 16 / 9;
+  }
+}
+
 /* Page Title Area with Background Image */
 .page-title {
   margin: 0;
@@ -316,14 +334,14 @@
 .product-info-small h5 {
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
-  color: #111;
+  color: #000000;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .product-price {
-  color: #4f46e5;
+  color: #000000;
   font-weight: 700;
   font-size: 1.1rem;
 }

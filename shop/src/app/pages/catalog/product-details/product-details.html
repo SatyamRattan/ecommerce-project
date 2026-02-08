@@ -5,18 +5,11 @@
     <div class="product-main-card">
       <!-- Left Column: Image Gallery -->
       <div class="product-gallery-container">
-        <!-- Thumbnail Sidebar -->
-        <div class="thumbnail-sidebar" *ngIf="product.media && product.media.length > 1">
-          <div *ngFor="let m of product.media" class="thumbnail-box" [class.active]="selectedImage === m.file"
-            (click)="selectedImage = m.file">
-            <img [src]="m.file" alt="Thumbnail">
-          </div>
-        </div>
-
         <!-- Main Product View -->
         <div class="product-image-container">
           <img [src]="selectedImage || 'assets/images/placeholder.jpg'" [alt]="product.name" class="featured-image">
-          <button (click)="toggleWishlist()" [class.active]="wishlist.wishlistedIds().has(product.id)"
+
+          <button (click)="toggleWishlist()" [class.active]="wishlist.isWishlisted(selectedVariant?.id || product.id)()"
             class="floating-wishlist-btn">
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
               stroke-linecap="round" stroke-linejoin="round">
@@ -77,15 +70,15 @@
         <div class="trust-features">
           <div class="feature-item">
             <span class="icon">🚚</span>
-            <span>Fast & Free Delivery</span>
+            <span>Fast & Free Delivery upto 2000</span>
           </div>
           <div class="feature-item">
             <span class="icon">🛡️</span>
-            <span>2-Year Warranty</span>
+            <span>3-Months Warranty</span>
           </div>
           <div class="feature-item">
             <span class="icon">🔄</span>
-            <span>Easy 30-Day Returns</span>
+            <span>Easy 7-Day Returns</span>
           </div>
         </div>
       </div>

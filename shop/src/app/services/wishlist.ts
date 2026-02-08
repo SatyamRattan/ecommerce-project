@@ -19,10 +19,10 @@ export class Wishlist {
   private BASE_URL = 'http://127.0.0.1:8000/api/catalog/wishlist/';
   private TOGGLE_URL = `${this.BASE_URL}toggle/`;
 
-  // Signal to store identifiers of wishlisted products (Set for O(1) lookup)
+  // Signal to store identifiers of wishlisted items (Variant IDs preferred, Fallback to Product ID if no variant)
   private wishlistState: WritableSignal<Set<number>> = signal(new Set<number>());
 
-  // Public readonly signal for UI (if needed directly)
+  // Public readonly signal for UI
   public readonly wishlistedIds = this.wishlistState.asReadonly();
 
   // Loading state signal
@@ -47,21 +47,25 @@ export class Wishlist {
   /**
    * Fetch latest wishlist from backend
    */
-  /**
-   * Fetch latest wishlist from backend
-   */
   getWishlist(): Observable<any[]> {
     this.isLoading.set(true);
     return this.http.get<any[]>(this.BASE_URL).pipe(
       tap((items) => {
-        // Map response to Set of product IDs for O(1) checks
-        const productIds = new Set<number>();
+        // Map response to Set of IDs (variant ID preferred, fallback to product ID)
+        const itemIds = new Set<number>();
         items.forEach(item => {
-          // Handle both flat ID and expanded object
-          const pId = typeof item.product === 'object' ? item.product.id : item.product;
-          if (pId) productIds.add(pId);
+          const vId = typeof item.variant === 'object' ? item.variant?.id : item.variant;
+          const pId = typeof item.product === 'object' ? item.product?.id : item.product;
+
+          // If it's a variant-based wishlist, use vId
+          if (vId) {
+            itemIds.add(vId);
+          } else if (pId) {
+            // Fallback for product-only wishlist items
+            itemIds.add(pId);
+          }
         });
-        this.wishlistState.set(productIds);
+        this.wishlistState.set(itemIds);
       }),
       finalize(() => this.isLoading.set(false))
     );
@@ -74,26 +78,31 @@ export class Wishlist {
   }
 
   /**
-   * Remove item from wishlist (alias to toggle for compatibility)
+   * Remove item from wishlist by record ID
    */
-  removeFromWishlist(productId: number): Observable<any> {
-    return this.toggleWishlist(productId);
+  removeFromWishlist(id: number): Observable<any> {
+    return this.http.delete(`${this.BASE_URL}${id}/`).pipe(
+      tap(() => {
+        console.log(`[Wishlist] Item #${id} removed`);
+        // We refresh the whole state to ensure consistency, 
+        // especially since tracked IDs in wishlistState depend on response fields
+        this.refreshWishlist();
+      })
+    );
   }
 
   /**
-   * Check if a product is wishlisted (Reactive Helper)
+   * Check if an ID is wishlisted (Reactive Helper)
    */
-  isWishlisted(productId: number) {
-    return computed(() => this.wishlistState().has(productId));
+  isWishlisted(id: number | undefined) {
+    return computed(() => id ? this.wishlistState().has(id) : false);
   }
 
   /**
-   * Toggle wishlist state for a product
-   * Handles Optimistic UI updates
+   * Toggle wishlist state for a product/variant
    */
   toggleWishlist(productId: number, variantId: number | null = null): Observable<ToggleWishlistResponse> {
     if (!this.auth.isAuthenticated()) {
-      // return error if not logged in, let component handle redirect/toast
       return throwError(() => new Error('Unauthenticated'));
     }
 
@@ -102,14 +111,17 @@ export class Wishlist {
       variant: variantId
     };
 
+    // Use variantId if present, otherwise fallback to productId for tracking
+    const trackId = variantId || productId;
+
     // OPTIMISTIC UPDATE
     const currentState = new Set(this.wishlistState());
-    const isCurrentlyWishlisted = currentState.has(productId);
+    const isCurrentlyWishlisted = currentState.has(trackId);
 
     if (isCurrentlyWishlisted) {
-      currentState.delete(productId);
+      currentState.delete(trackId);
     } else {
-      currentState.add(productId);
+      currentState.add(trackId);
     }
 
     // Update Signal immediately
@@ -123,12 +135,11 @@ export class Wishlist {
         console.error('[Wishlist] Toggle failed, rolling back:', err);
 
         // ROLLBACK ON ERROR
-        // Revert to previous state (inverse of what we just did)
         const rollbackState = new Set(this.wishlistState());
         if (isCurrentlyWishlisted) {
-          rollbackState.add(productId); // Put it back
+          rollbackState.add(trackId);
         } else {
-          rollbackState.delete(productId); // Remove it
+          rollbackState.delete(trackId);
         }
         this.wishlistState.set(rollbackState);
 

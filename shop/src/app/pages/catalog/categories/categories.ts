@@ -1,15 +1,16 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Api } from '../../../services/api'; // Service for making API calls
 import { Router, RouterLink } from '@angular/router'; // Router for navigation
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 import { FormsModule } from '@angular/forms';
+import { CarouselComponent } from '../../../shared/components/carousel/carousel';
 
 @Component({
   selector: 'app-categories', // Component tag name
   standalone: true, // Standalone component (no NgModule required)
-  imports: [CommonModule, RouterLink, FormsModule], // Import Angular common directives, RouterLink, and FormsModule
+  imports: [CommonModule, RouterLink, FormsModule, CarouselComponent], // Import Angular common directives, RouterLink, and FormsModule
   templateUrl: './categories.html', // HTML template file
   styleUrl: './categories.css', // CSS file for styling
   animations: [
@@ -30,6 +31,13 @@ export class Categories {
 
   categories: any[] = []; // Array to store the list of categories fetched from API
   isLoading: boolean = false; // Loading flag to show a loader while fetching categories
+
+  // Hero Banners for the Carousel
+  heroBanners: string[] = [
+    'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200', // Retail Store
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=1200', // Modern Watch
+    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=1200', // Laptop / Workspace
+  ];
 
   // Track which parent category is currently expanded (ID of expanded category, or null if none)
   expandedCategoryId: number | null = null;
@@ -86,17 +94,27 @@ export class Categories {
         // Custom Priority: Find specific products requested by user
         const prioritized = inStockProducts.filter((p: any) =>
           p.name.toLowerCase().includes('pepejeans') ||
-          p.name.toLowerCase().includes('zara')
+          p.name.toLowerCase().includes('zara') ||
+          p.name.toLowerCase().includes('samsung s23') ||
+          p.name.toLowerCase().includes('prestige pan')
         );
 
-        // Others: Products that aren't the prioritized ones
+        // Others: Products that aren't the prioritized ones and NOT the ones to be replaced
         const others = inStockProducts.filter((p: any) =>
           !p.name.toLowerCase().includes('pepejeans') &&
-          !p.name.toLowerCase().includes('zara')
+          !p.name.toLowerCase().includes('zara') &&
+          !p.name.toLowerCase().includes('samsung s23') &&
+          !p.name.toLowerCase().includes('prestige pan') &&
+          !p.name.toLowerCase().includes('juicer mixer grinder') &&
+          !p.name.toLowerCase().includes('water purifier')
         );
 
         // Combine: Prioritized items first, then fill up to 4 with others
-        this.featuredProducts = [...prioritized, ...others].slice(0, 4);
+        this.featuredProducts = [...prioritized, ...others].slice(0, 4).map((p: any) => ({
+          ...p,
+          price: p.discount_price || p.base_price,
+          image_url: p.media?.[0]?.file || p.image_url
+        }));
 
         this.cdr.detectChanges();
       },

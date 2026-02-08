@@ -4,12 +4,18 @@ export interface ProductMedia {
     file: string;
 }
 
+export interface ProductVariantImage {
+    id: number;
+    image: string;
+}
+
 export interface ProductVariant {
     id: number;
     variant_type: string;
     variant_value: string;
     variant_price: number | string;
     stock: string | number;
+    images?: ProductVariantImage[];
 }
 
 export interface Product {
