@@ -1,22 +1,39 @@
-// Import the Component decorator from Angular core to define a component
-import { Component } from '@angular/core';
-
-// Import CommonModule to use common Angular directives like *ngIf, *ngFor
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 
-// Import RouterLink to enable navigation via <a [routerLink]> in the template
-import { RouterLink } from '@angular/router';
-
-// Define the Angular component
 @Component({
-  selector: 'app-order-confirmation',  // The HTML tag used to include this component
-  standalone: true,                     // Standalone component, no NgModule required
-  imports: [CommonModule, RouterLink],  // Import modules needed by this component
-  templateUrl: './order-confirmation.html', // Path to the HTML template for this component
-  styleUrl: './order-confirmation.css',    // Path to the CSS file for styling this component
+  selector: 'app-order-confirmation',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './order-confirmation.html',
+  styleUrl: './order-confirmation.css',
 })
-// Export the component class
-export class OrderConfirmation {
-  // Currently empty because this component is static and only displays confirmation info
-  // Future functionality could include displaying order details from a service or showing tracking info
+export class OrderConfirmation implements OnInit {
+  order: any = null;
+
+  constructor(private router: Router) {
+    const navigation = this.router.getCurrentNavigation();
+    this.order = navigation?.extras.state?.['order'];
+  }
+
+  ngOnInit() {
+    console.log('[OrderConfirmation] Displaying Summary for:', this.order);
+  }
+
+  get items(): any[] {
+    if (!this.order?.items) return [];
+
+    return this.order.items.map((item: any) => {
+      const variant = item.variant;
+      const baseName = variant?.product?.name || item.product?.name || `Product #${item.product}`;
+      const variantSuffix = variant?.color ? ` (${variant.color})` : '';
+
+      return {
+        ...item,
+        display_name: `${baseName}${variantSuffix}`,
+        display_image: variant?.image || item.product?.image_url || 'assets/images/placeholder.jpg'
+      };
+    });
+  }
 }

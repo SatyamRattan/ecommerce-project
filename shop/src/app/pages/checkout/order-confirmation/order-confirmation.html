@@ -15,8 +15,28 @@
 
         <!-- Informational paragraph confirming order placement -->
         <p>
-            Thank you for your purchase. Your orders have been received and are being processed.
+            Thank you for your purchase. Your order <strong>#{{ order?.id || order?.order_number }}</strong> has been
+            received and is being processed.
         </p>
+
+        <!-- Order Summary Section -->
+        <div *ngIf="order" class="order-summary">
+            <h3>Order Summary</h3>
+            <div class="summary-items">
+                <div *ngFor="let item of items" class="summary-item">
+                    <img [src]="item.display_image" class="item-thumb">
+                    <div class="item-info">
+                        <p class="name">{{ item.display_name }}</p>
+                        <p class="meta">Qty: {{ item.quantity }}</p>
+                    </div>
+                    <p class="price">₹{{ item.price | number:'1.2-2' }}</p>
+                </div>
+            </div>
+            <div class="summary-total">
+                <span>Total Amount Paid:</span>
+                <span class="amount">₹{{ (order.total_amount || order.total) | number:'1.2-2' }}</span>
+            </div>
+        </div>
 
         <!-- Action buttons for the user after order placement -->
         <div class="actions">

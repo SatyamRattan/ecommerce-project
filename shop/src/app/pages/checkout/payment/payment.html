@@ -48,22 +48,32 @@
                 <div class="items-list">
                     <!-- Loop through each cart item -->
                     <div class="cart-item" *ngFor="let item of cartItems">
+                        <!-- Variant image -->
+                        <div class="item-visual" *ngIf="item.variant">
+                            <img [src]="item.variant.image" [alt]="item.variant.product.name" width="60"
+                                class="item-thumb">
+                        </div>
 
                         <!-- Product information -->
                         <div class="item-info">
-                            <!-- Product name -->
-                            <h5>{{ item.product.name }}</h5>
+                            <!-- Product and Variant name -->
+                            <h5>
+                                {{ item.variant?.product?.name || item.product?.name }}
+                                <span *ngIf="item.variant">({{ item.variant.color }})</span>
+                            </h5>
 
                             <!-- Quantity and price -->
                             <p>
                                 Qty: {{ item.quantity }} x
-                                ₹{{ (item.product.discount_price ?? item.product.base_price) | number:'1.2-2' }}
+                                ₹{{ (item.price || item.product?.discount_price || item.product?.base_price || 0) |
+                                number:'1.2-2' }}
                             </p>
                         </div>
 
                         <!-- Total price for this cart item -->
                         <p class="item-total">
-                            ₹{{ ((item.product.discount_price ?? item.product.base_price) * item.quantity) |
+                            ₹{{ ((item.price || item.product?.discount_price || item.product?.base_price || 0) *
+                            item.quantity) |
                             number:'1.2-2' }}
                         </p>
                     </div>

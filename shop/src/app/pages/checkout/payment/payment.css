@@ -175,3 +175,20 @@ h4 {
     text-align: center;
     font-size: 14px;
 }
+/* Item Image Styles */
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.item-visual {
+    flex-shrink: 0;
+}
+
+.item-thumb {
+    object-fit: contain;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
