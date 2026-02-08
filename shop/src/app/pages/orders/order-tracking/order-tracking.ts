@@ -165,16 +165,24 @@ export class OrderTracking implements OnInit, OnDestroy {
     if (!this.order) return [];
 
     // Normalize items: prioritize order.items array, then order as single item
+    let list: any[] = [];
     if (this.order.items && Array.isArray(this.order.items)) {
-      return this.order.items;
+      list = this.order.items;
+    } else if (this.order.product_id || this.order.product_name || this.order.price) {
+      list = [this.order];
     }
 
-    // Check if the order object itself has item properties
-    if (this.order.product_id || this.order.product_name || this.order.price) {
-      return [this.order];
-    }
+    return list.map(item => {
+      const variant = item.variant;
+      const baseName = item.product?.name || variant?.product?.name || item.product_name || `Product #${item.product_id || item.product}`;
+      const variantSuffix = variant?.color ? ` (${variant.color})` : '';
 
-    return [];
+      return {
+        ...item,
+        display_name: `${baseName}${variantSuffix}`,
+        display_image: variant?.image || item.product?.image_url || 'assets/images/placeholder.jpg'
+      };
+    });
   }
 
   // Derived from history, or 'pending' fallback
@@ -232,8 +240,8 @@ export class OrderTracking implements OnInit, OnDestroy {
     const items = this.items;
     if (items.length > 0) {
       return items.reduce((total, item) => {
-        // Securely use item.price, fallback to order.price (legacy)
-        const price = Number(item.price || this.order.price || 0);
+        // Securely use item.price, as requested
+        const price = Number(item.price || 0);
         const qty = Number(item.quantity || 1);
         return total + (price * qty);
       }, 0);

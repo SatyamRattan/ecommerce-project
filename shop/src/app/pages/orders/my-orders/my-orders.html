@@ -42,13 +42,14 @@
                     <div class="order-card-body">
                         <div class="items-preview">
                             <div *ngFor="let item of order.items" class="item-summary-line">
-                                <span class="item-name">
-                                    {{ item.product_name || item.product?.name || 'Product #' + (item.product_id ||
-                                    item.product) }}
-                                </span>
+                                <div class="item-main-info">
+                                    <img [src]="item.display_image" [alt]="item.display_name" width="70"
+                                        class="item-thumb">
+                                    <span class="item-name">{{ item.product?.name || item.display_name }}</span>
+                                </div>
                                 <div class="item-details-row">
                                     <span class="item-qty">Qty: {{ item.quantity }}</span>
-                                    <span class="item-price">₹{{ (item.price || order.price) | number:'1.2-2' }}</span>
+                                    <span class="item-price">₹{{ item.price | number:'1.2-2' }}</span>
                                 </div>
                             </div>
                         </div>

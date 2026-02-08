@@ -44,11 +44,19 @@ export class MyOrders implements OnInit {
         // Normalize each order
         list = list.map((order: any) => {
           // Normalize items
-          let items = (order.items || []).map((item: any) => ({
-            ...item,
-            // Use the new product_name from backend, or fallback to nested product object
-            product_name: item.product_name || item.product?.name || `Product #${item.product_id || item.product}`
-          }));
+          let items = (order.items || []).map((item: any) => {
+            const variant = item.variant;
+            // Prefer variant's nested product name, then item.product_name, then product object name
+            const baseName = item.product?.name || variant?.product?.name || item.product_name || `Product #${item.product_id || item.product}`;
+            const variantSuffix = variant?.color ? ` (${variant.color})` : '';
+
+            return {
+              ...item,
+              display_name: `${baseName}${variantSuffix}`,
+              // Use variant image if available
+              display_image: variant?.image || item.product?.image_url || 'assets/images/placeholder.jpg'
+            };
+          });
 
           // Fallback for flat order structures (if any)
           if (items.length === 0 && (order.product_id || order.product_name || order.price)) {

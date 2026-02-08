@@ -123,15 +123,14 @@
             <div class="items-list">
                 <!-- Iterate over normalized items array (handles single or multi-item responses) -->
                 <div class="order-item" *ngFor="let item of items">
+                    <div class="item-visual">
+                        <img [src]="item.display_image" [alt]="item.display_name" class="item-thumb">
+                    </div>
 
                     <!-- Product details -->
                     <div class="item-info">
                         <!-- Handles multiple backend response formats safely -->
-                        <h5>
-                            {{ item.product_name
-                            || item.product?.name
-                            || 'Product' }}
-                        </h5>
+                        <h5>{{ item.product?.name || item.display_name }}</h5>
 
                         <!-- Quantity -->
                         <p>Quantity: {{ item.quantity }}</p>
@@ -139,8 +138,7 @@
 
                     <!-- Item price formatted with number pipe -->
                     <p class="item-price">
-                        <!-- Check if price is on item or falls back to order price (legacy) -->
-                        ₹{{ (item.price || order.price) | number:'1.2-2' }}
+                        ₹{{ item.price | number:'1.2-2' }}
                     </p>
                 </div>
             </div>

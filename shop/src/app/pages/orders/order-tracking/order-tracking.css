@@ -307,3 +307,17 @@ h2 {
         margin-bottom: 5px;
     }
 }
+/* Item Image Styles */
+.item-visual {
+    flex-shrink: 0;
+    margin-right: 15px;
+}
+
+.item-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
