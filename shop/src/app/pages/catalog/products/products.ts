@@ -65,16 +65,15 @@ export class Products {
 
   addToCart(event: Event, product: any) {
     event.stopPropagation();
-    console.log('[Products] Adding to cart:', product.id);
+    // console.log('[Products] Adding to cart:', product.id);
 
     this.cartService.addToCart(product).subscribe({
       next: () => {
-        if (typeof alert !== 'undefined') {
-          alert(`${product.name} added to cart!`);
-        }
+        // TODO: Replace with Toast notification
+        console.info(`${product.name} added to cart`);
       },
       error: (err) => {
-        console.error('[Products] Add to cart error FULL:', err);
+        // console.error('[Products] Add to cart error FULL:', err);
         let msg = 'Unknown error';
         if (err.error) {
           msg = typeof err.error === 'string'
@@ -84,9 +83,8 @@ export class Products {
           msg = err.message;
         }
 
-        if (typeof alert !== 'undefined') {
-          alert(`Failed to add to cart: ${msg}\n\nCheck console for details.`);
-        }
+        // TODO: Replace with Toast notification
+        console.warn(`Failed to add to cart: ${msg}`);
       }
     });
   }

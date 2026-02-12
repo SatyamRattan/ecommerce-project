@@ -1,76 +1,76 @@
-import { Component } from '@angular/core'; 
+import { Component } from '@angular/core';
 // Importing Component decorator to define an Angular component
 
-import { Router, RouterLink } from '@angular/router'; 
+import { Router, RouterLink } from '@angular/router';
 // Router allows programmatic navigation
 // RouterLink allows using [routerLink] in templates
 
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 // ReactiveFormsModule is required to use reactive forms
 // FormBuilder helps quickly create form groups and controls
 // FormGroup represents a group of form controls
 // Validators provide built-in validation rules (required, minLength, email, etc.)
 
-import { Auth } from '../../../services/auth'; 
+import { Auth } from '../../../services/auth';
 // Importing custom Auth service to handle user registration
 
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
 // CommonModule provides common Angular directives (ngIf, ngFor, etc.)
 
 @Component({
-  selector: 'app-register', 
+  selector: 'app-register',
   // This is the HTML tag used to embed this component: <app-register></app-register>
 
-  standalone: true, 
+  standalone: true,
   // Marks this component as standalone (does not need to be declared in a module)
 
-  imports: [CommonModule, ReactiveFormsModule, RouterLink], 
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   // Importing Angular modules and directives used in the component template
 
-  templateUrl: './register.html', 
+  templateUrl: './register.html',
   // External HTML template for this component
 
-  styleUrl: './register.css', 
+  styleUrl: './register.css',
   // External CSS file for styling this component
 })
 export class Register {
-  registerForm: FormGroup; 
+  registerForm: FormGroup;
   // A FormGroup object representing the registration form and its controls
 
-  errorMessage: string = ''; 
+  errorMessage: string = '';
   // String to store error messages from backend/API to show to the user
 
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     // Inject FormBuilder to easily create form controls and groups
 
-    private auth: Auth, 
+    private auth: Auth,
     // Inject Auth service for making API calls to register the user
 
-    private router: Router 
+    private router: Router
     // Inject Router to programmatically navigate after registration
   ) {
     // Initialize the reactive form using FormBuilder
     this.registerForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]], 
+      email: ['', [Validators.required, Validators.email]],
       // Email form control: default empty, required, must match email pattern
 
-      password: ['', [Validators.required, Validators.minLength(6)]], 
+      password: ['', [Validators.required, Validators.minLength(6)]],
       // Password form control: default empty, required, minimum 6 characters
 
-      name: ['', Validators.required], 
+      name: ['', Validators.required],
       // Name form control: required
 
-      phone: [''], 
+      phone: [''],
       // Phone form control: optional, default empty
 
-      gender: ['OTHER'], 
+      gender: ['OTHER'],
       // Gender form control: default value is 'OTHER'
 
-      dob: [''], 
+      dob: [''],
       // Date of Birth form control: optional
 
-      address: [''] 
+      address: ['']
       // Address form control: optional
     });
   }
@@ -83,18 +83,18 @@ export class Register {
       this.auth.register(this.registerForm.value).subscribe({
         next: () => {
           // On successful registration
-          this.router.navigate(['/login']); 
+          this.router.navigate(['/login']);
           // Navigate the user to the login page
         },
         error: (err) => {
           // Handle errors returned from backend/API
-          const detail = err.error?.detail || err.error?.message || err.message || 'Unknown error'; 
+          const detail = err.error?.detail || err.error?.message || err.message || 'Unknown error';
           // Extract a meaningful error message from the API response
 
-          this.errorMessage = 'Registration failed: ' + detail; 
+          this.errorMessage = 'Registration failed: ' + detail;
           // Set the error message so it can be displayed in the template
 
-          console.error('Registration error:', err); 
+          console.error('Registration error:', err);
           // Log full error object to console for debugging
         }
       });

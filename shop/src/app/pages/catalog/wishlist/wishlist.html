@@ -1,65 +1,70 @@
 <div class="wishlist-page">
-    <!-- Hero Header -->
-    <header class="wishlist-header">
-        <div class="container">
-            <h1>Your Wishlist</h1>
-            <p>Keep track of the items you love and find them easily when you're ready to shop.</p>
+    <div class="wishlist-hero">
+        <div class="container hero-content">
+            <h1>My Wishlist</h1>
+            <p>Your curated collection of premium favorites</p>
         </div>
-    </header>
+    </div>
 
     <div class="container main-content">
-        <div *ngIf="wishlistItems$ | async as wishlistItems; else loadingTpl">
+        <ng-container *ngIf="wishlistItems$ | async as items; else loading">
+            <div class="wishlist-list" *ngIf="items.length > 0; else emptyWishlist">
+                @for (item of items; track item.id) {
+                <div class="wishlist-item-card">
+                    <div class="item-visual">
+                        <img [src]="item.image || item.variant?.image || item.product?.image_url || 'assets/images/placeholder.jpg'"
+                            [alt]="item.product_name || item.product?.name">
+                    </div>
 
-            <!-- Empty State -->
-            <div *ngIf="wishlistItems.length === 0" class="empty-wishlist">
-                <div class="empty-icon">❤️</div>
-                <h2>Your Wishlist is Empty</h2>
-                <p>Seems like you haven't added anything to your wishlist yet. Start exploring our collection and find
-                    something you love!</p>
-                <a routerLink="/products" class="discover-btn">Discover Products</a>
-            </div>
+                    <div class="item-info">
+                        <div class="item-main">
+                            <span class="category">{{ item.category_name || item.product?.category?.name || 'Category'
+                                }}</span>
+                            <h3 class="product-name">{{ item.product_name || item.product?.name }}</h3>
+                            <div class="variant-chips" *ngIf="item.variant">
+                                <span class="chip">{{ item.variant.color }}</span>
+                            </div>
+                        </div>
 
-            <!-- Wishlist Grid -->
-            <div *ngIf="wishlistItems.length > 0" class="wishlist-grid">
-                <div *ngFor="let item of wishlistItems" class="wishlist-card">
-                    <div class="card-image">
-                        <img [src]="item.image || 'assets/images/placeholder.jpg'" [alt]="item.product_name">
-                        <button (click)="removeItem(item.id)" class="remove-icon-btn" title="Remove from wishlist">
-                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2"
-                                fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
+                        <div class="item-price">
+                            <span class="price">₹{{ (item.price || item.product?.discount_price ||
+                                item.product?.base_price || 0) | number:'1.2-2' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="item-actions">
+                        <button class="action-btn cart-btn"
+                            [routerLink]="['/product', item.product?.id || item.product]">
+                            Move to Cart
+                        </button>
+                        <button class="action-btn remove-btn" (click)="removeItem(item.id)" aria-label="Remove item">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path
-                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                </path>
-                                <line x1="10" y1="11" x2="10" y2="17"></line>
-                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
+                            <span>Remove</span>
                         </button>
                     </div>
-                    <div class="card-details">
-                        <div class="category-tag">{{ item.category_name || 'Category' }}</div>
-                        <h3 class="product-title">{{ item.product_name }}</h3>
-                        <p class="variant-info">
-                            {{item.variant_type}}: {{item.variant_value}}
-                        </p>
-                        <div class="product-meta">
-                            <span class="price">₹{{ item.price }}</span>
-                            <span class="stock-status" [class.in-stock]="(item.stock ?? 0) > 0">
-                                {{ (item.stock ?? 0) > 0 ? 'In Stock' : 'Out of Stock' }}
-                            </span>
-                        </div>
-                        <div class="card-actions">
-                            <a [routerLink]="['/product', item.product]" class="view-details-btn">View Details</a>
-                        </div>
-                    </div>
                 </div>
+                }
             </div>
-        </div>
 
-        <ng-template #loadingTpl>
+            <ng-template #emptyWishlist>
+                <div class="empty-state">
+                    <div class="empty-icon">❤️</div>
+                    <h2>Your wishlist is empty</h2>
+                    <p>Discover our latest collections and start saving your favorites today.</p>
+                    <button class="shop-btn" routerLink="/categories">Start Shopping</button>
+                </div>
+            </ng-template>
+        </ng-container>
+
+        <ng-template #loading>
             <div class="loading-state">
                 <div class="spinner"></div>
-                <p>Fetching your favorites...</p>
+                <p>Loading your wishlist...</p>
             </div>
         </ng-template>
     </div>

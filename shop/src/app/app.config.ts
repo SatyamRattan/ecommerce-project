@@ -14,7 +14,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 // Import HttpClient and ability to add interceptors globally
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
 // Import a custom authentication interceptor
 import { authInterceptor } from './auth.interceptor';
@@ -23,7 +23,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // 1️⃣ Provide HttpClient globally and attach authInterceptor
     //    - This ensures all HTTP requests go through this interceptor
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
 
     // 2️⃣ Enable global error listeners for uncaught exceptions and promise rejections
     //    - Logs errors to console by default, can be extended for analytics

@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -7,36 +7,50 @@ import { RouterLink } from '@angular/router';
     standalone: true,
     imports: [CommonModule, RouterLink],
     templateUrl: './about.html',
-    styleUrl: './about.css',
+    styleUrl: './about.css'
 })
-export class About implements OnInit {
-    // Stats for the trust section
+export class About implements OnInit, OnDestroy {
     stats = [
-        { value: 0, target: 10000, label: 'Happy Customers', suffix: '+' },
-        { value: 0, target: 5000, label: 'Products', suffix: '+' },
-        { value: 0, target: 25000, label: 'Orders Delivered', suffix: '+' },
-        { value: 0, target: 98, label: 'Satisfaction Rate', suffix: '%' }
+        { label: 'Happy Customers', value: 0, target: 15000, suffix: '+' },
+        { label: 'Premium Products', value: 0, target: 2500, suffix: '+' },
+        { label: 'Stores Worldwide', value: 0, target: 50, suffix: '' },
+        { label: 'Quality Awards', value: 0, target: 12, suffix: '' }
     ];
 
-    ngOnInit() {
-        this.animateStats();
+    private animationInterval: any;
+
+    constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
+
+    ngOnInit(): void {
+        if (isPlatformBrowser(this.platformId)) {
+            this.animateStats();
+        }
     }
 
-    animateStats() {
-        this.stats.forEach(stat => {
-            const duration = 2000; // 2 seconds
-            const steps = 50;
-            const increment = stat.target / steps;
-            let current = 0;
-            const interval = setInterval(() => {
-                current += increment;
-                if (current >= stat.target) {
-                    stat.value = stat.target;
-                    clearInterval(interval);
-                } else {
-                    stat.value = Math.floor(current);
-                }
-            }, duration / steps);
-        });
+    ngOnDestroy(): void {
+        if (this.animationInterval) {
+            clearInterval(this.animationInterval);
+        }
+    }
+
+    private animateStats(): void {
+        const duration = 2000; // 2 seconds
+        const frameDuration = 1000 / 60; // 60 FPS
+        const totalFrames = Math.round(duration / frameDuration);
+
+        let frame = 0;
+        this.animationInterval = setInterval(() => {
+            frame++;
+            const progress = frame / totalFrames;
+
+            this.stats.forEach(stat => {
+                stat.value = Math.floor(stat.target * progress);
+            });
+
+            if (frame === totalFrames) {
+                this.stats.forEach(stat => stat.value = stat.target);
+                clearInterval(this.animationInterval);
+            }
+        }, frameDuration);
     }
 }

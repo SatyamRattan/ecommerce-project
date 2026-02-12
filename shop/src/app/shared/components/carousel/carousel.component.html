@@ -1,0 +1,26 @@
+<div class="carousel-container" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+    <div class="carousel-slides" [style.transform]="'translateX(-' + (currentIndex() * 100) + '%)'">
+        <div *ngFor="let image of images; let i = index" class="carousel-slide">
+            <img [src]="image" [alt]="'Slide ' + (i + 1)" loading="lazy">
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <button class="nav-btn prev" (click)="prev()" *ngIf="images.length > 1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6" />
+        </svg>
+    </button>
+    <button class="nav-btn next" (click)="next()" *ngIf="images.length > 1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6" />
+        </svg>
+    </button>
+
+    <!-- Indicators -->
+    <div class="carousel-indicators" *ngIf="images.length > 1">
+        <button *ngFor="let _ of images; let i = index" class="indicator" [class.active]="i === currentIndex()"
+            (click)="goTo(i)">
+        </button>
+    </div>
+</div>

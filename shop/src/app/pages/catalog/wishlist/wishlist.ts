@@ -18,6 +18,7 @@ export class Wishlist {
 
   constructor(private wishlistService: WishlistService) { }
 
+
   ngOnInit() {
     this.wishlistItems$ = this.wishlistService.getWishlist();
   }

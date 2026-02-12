@@ -2,13 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
     providedIn: 'root'
 })
 export class ProductService {
 
     // Base URL for product-related backend APIs
-    private BASE_URL = 'http://127.0.0.1:8000/api/catalog';
+    private BASE_URL = `${environment.apiUrl}/catalog`;
 
     constructor(private http: HttpClient) { }
 

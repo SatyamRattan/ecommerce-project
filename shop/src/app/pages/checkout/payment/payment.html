@@ -8,9 +8,7 @@
         <div class="steps">
             <!-- Step 1: Address -->
             <div class="step">1. Address</div>
-            <!-- Step 2: Payment (active/current step) -->
             <div class="step active">2. Payment</div>
-            <!-- Step 3: Confirmation -->
             <div class="step">3. Confirm</div>
         </div>
 
@@ -26,7 +24,7 @@
 
             <!-- Shipping Address Section -->
             <div class="section">
-                <h4>Shipping To</h4>
+                <h4>Shipping to</h4>
 
                 <!-- Display address if 'address' exists -->
                 <div class="address-card" *ngIf="address">
@@ -145,7 +143,8 @@
                 <button class="btn-pay" [disabled]="isProcessing || !agreed" (click)='placeOrder()'>
                     <!-- Disable if processing or user hasn’t agreed On click, call placeOrder() method -->
                     <!-- Dynamic button text based on processing state -->
-                    {{ isProcessing ? 'Processing...' : 'Place Order ₹' + (total | number:'1.2-2') }}
+                    {{ isProcessing ? 'Processing...' : ('Place Order' + ' ₹' + (total |
+                    number:'1.2-2')) }}
                 </button>
 
             </div> <!-- End payment-card -->

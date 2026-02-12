@@ -10,6 +10,8 @@ import { Observable, tap, map, BehaviorSubject } from 'rxjs';
 // Router is used for navigation (e.g. redirecting to login)
 import { Router } from '@angular/router';
 
+import { environment } from '../../environments/environment';
+
 /**
  * User interface defining expected user fields
  * Matches (or loosely matches) backend user model
@@ -33,7 +35,7 @@ export class Auth {
   /**
    * Base backend URL for all authentication-related APIs
    */
-  private BASE_URL = 'http://127.0.0.1:8000/api/v1/users';
+  private BASE_URL = `${environment.apiUrl}/v1/users`;
 
   /**
    * Keys used to store auth data in localStorage
@@ -400,6 +402,24 @@ export class Auth {
           }
         })
       );
+  }
+
+  /**
+   * Sends a password reset link to the user's email
+   */
+  forgotPassword(email: string): Observable<any> {
+    // Note: Using special auth endpoint, not user endpoint
+    return this.http.post(`${environment.apiUrl}/users/auth/forgot-password/`, { email });
+  }
+
+  /**
+   * Resets the user's password using the token from the email
+   */
+  resetPassword(token: string, password: string, confirmPassword: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/users/auth/reset-password/`, {
+      token,
+      password
+    });
   }
 
   /**

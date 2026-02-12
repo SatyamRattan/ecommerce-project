@@ -15,6 +15,12 @@ import { Register } from './pages/auth/register/register';
 // User profile page (requires authentication logically)
 import { Profile } from './pages/auth/profile/profile';
 
+// Forgot Password component
+import { ForgotPassword } from './pages/auth/forgot-password/forgot-password';
+
+// Reset Password component
+import { ResetPassword } from './pages/auth/reset-password/reset-password';
+
 /* =======================
    CATALOG / SHOP PAGES
    ======================= */
@@ -74,6 +80,7 @@ import { ContactInbox } from './pages/admin/contact-inbox/contact-inbox';
 // About Us page
 import { About } from './pages/about/about';
 
+
 /**
  * Application route configuration
  */
@@ -96,6 +103,12 @@ export const routes: Routes = [
 
    // Profile page (should ideally be protected by Auth Guard)
    { path: 'profile', component: Profile },
+
+   // Forgot Password
+   { path: 'forgot-password', component: ForgotPassword },
+
+   // Reset Password (uses query param ?token=)
+   { path: 'reset-password', component: ResetPassword },
 
    /* ========= SHOP ROUTES ========= */
 

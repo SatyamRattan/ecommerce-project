@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router'; // Router for navigation
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 import { FormsModule } from '@angular/forms';
-import { CarouselComponent } from '../../../shared/components/carousel/carousel';
+import { CarouselComponent } from '../../../shared/components/carousel/carousel.component';
 
 @Component({
   selector: 'app-categories', // Component tag name

@@ -1,84 +1,75 @@
 <div class="orders-page">
-    <!-- Hero Header -->
-    <header class="orders-hero">
-        <div class="container">
-            <h1>Your Orders</h1>
-            <p>Track your purchases, manage returns, and view your order history in one place.</p>
+    <div class="orders-hero">
+        <div class="container hero-content">
+            <h1>My Orders</h1>
+            <p>Track and manage your recent purchases</p>
         </div>
-    </header>
+    </div>
 
     <div class="container main-content">
-        <div *ngIf="errorMessage" class="error-banner">
-            <div class="error-icon">⚠️</div>
-            <p>{{ errorMessage }}</p>
-        </div>
+        <div *ngIf="errorMessage" class="error-alert">{{ errorMessage }}</div>
 
-        <div *ngIf="orders$ | async as orders; else showSpinner">
-
-            <!-- Empty State -->
-            <div *ngIf="orders.length === 0" class="empty-orders">
-                <div class="empty-icon">📁</div>
-                <h2>No Orders Found</h2>
-                <p>Seems like you haven't placed any orders yet. Start shopping to find items you'll love!</p>
-                <a routerLink="/products" class="shop-now-btn">Start Shopping</a>
-            </div>
-
-            <!-- Orders List -->
-            <div *ngIf="orders.length > 0" class="orders-list">
-                <div *ngFor="let order of orders" class="order-card">
-                    <div class="order-card-header">
-                        <div class="primary-info">
-                            <span class="order-number">Order #{{ order.id }}</span>
-                            <span class="order-date">{{ (order.created_on || order.created_at) | date:'mediumDate'
-                                }}</span>
+        <ng-container *ngIf="orders$ | async as orders; else loadingTpl">
+            <div class="orders-list" *ngIf="orders.length > 0; else emptyOrders">
+                @for (order of orders; track order.id) {
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <h3>Order #{{ order.order_number }}</h3>
+                            <p class="order-date">{{ order.created_at | date }}</p>
                         </div>
-                        <div class="status-wrapper">
-                            <span [class]="'order-status ' + getStatusClass(order.status)">
-                                {{ order.status }}
-                            </span>
-                        </div>
+
+                        <span class="status-badge" [ngClass]="order.status">
+                            {{ order.status }}
+                        </span>
                     </div>
 
-                    <div class="order-card-body">
-                        <div class="items-preview">
-                            <div *ngFor="let item of order.items" class="item-summary-line">
-                                <div class="item-main-info">
-                                    <img [src]="item.display_image" [alt]="item.display_name" width="70"
-                                        class="item-thumb">
-                                    <span class="item-name">{{ item.product?.name || item.display_name }}</span>
-                                </div>
-                                <div class="item-details-row">
-                                    <span class="item-qty">Qty: {{ item.quantity }}</span>
-                                    <span class="item-price">₹{{ item.price | number:'1.2-2' }}</span>
-                                </div>
+                    <div class="order-products">
+                        @for (item of order.items; track item.id) {
+                        <div class="product-row">
+                            <div class="product-name">
+                                {{ item.display_name }}
+                            </div>
+                            <div class="product-qty">
+                                Qty: {{ item.quantity }}
                             </div>
                         </div>
+                        }
+                    </div>
 
-                        <div class="order-card-footer">
-                            <div class="total-section">
-                                <span class="total-label">Grand Total</span>
-                                <span class="total-amount">₹{{ order.total_price | number:'1.2-2' }}</span>
-                            </div>
+                    <div class="order-footer">
+                        <div class="order-total">
+                            Total: ₹{{ order.total_price | number:'1.2-2' }}
+                        </div>
 
-                            <div class="order-actions">
-                                <a [routerLink]="['/orders/track', order.id]" class="details-btn">
-                                    Track Order
-                                </a>
-                                <button *ngIf="order.status === 'pending' || order.status === 'processing'"
-                                    (click)="cancelOrder(order.id)" class="cancel-order-btn">
-                                    Cancel
-                                </button>
-                            </div>
+                        <div class="order-actions">
+                            <button class="btn track-btn" [routerLink]="['/orders/track', order.id]">Track
+                                Order</button>
+                            <button class="btn cancel-btn" *ngIf="order.status === 'pending'"
+                                (click)="cancelOrder(order.id)">
+                                Cancel Order
+                            </button>
                         </div>
                     </div>
                 </div>
+                }
             </div>
-        </div>
 
-        <ng-template #showSpinner>
-            <div class="loading-state" *ngIf="loading && !errorMessage">
+            <ng-template #emptyOrders>
+                <div class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h2>No orders yet</h2>
+                    <p>It looks like you haven't placed any orders yet. Start shopping to find your next favorite items!
+                    </p>
+                    <button class="shop-btn" routerLink="/categories">Start Shopping</button>
+                </div>
+            </ng-template>
+        </ng-container>
+
+        <ng-template #loadingTpl>
+            <div *ngIf="loading" class="loading-state">
                 <div class="spinner"></div>
-                <p>Retrieving your order history...</p>
+                <p>Fetching your orders...</p>
             </div>
         </ng-template>
     </div>
